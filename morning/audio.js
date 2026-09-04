@@ -18,6 +18,7 @@ class AudioManager {
     this.ttsBuffers = new Map();
     this.currentTtsSource = null;
     this.isWeChat = typeof navigator !== 'undefined' && /MicroMessenger/i.test(navigator.userAgent);
+    this._ttsReady = null; // 预生成语音映射加载 Promise（微信分支用）
   }
 
   /** 必须在用户手势（开始按钮）中调用：解锁 AudioContext、加载中文语音。 */
@@ -25,7 +26,7 @@ class AudioManager {
     this._initAudioContext();
     if (this.isWeChat) {
       // 微信内不初始化 speechSynthesis（不可靠），改为加载预生成语音映射
-      this._loadTtsFiles();
+      this._ttsReady = this._loadTtsFiles().catch(() => {});
     } else {
       this._initSpeech();
     }
@@ -166,9 +167,18 @@ class AudioManager {
       if (typeof opts.onEnd === 'function') opts.onEnd();
     };
 
-    // 微信降级：命中预生成语音映射则用音频文件播放
-    if (this.ttsFiles.has(text)) {
-      this._speakFromFile(text, opts, token, finish);
+    // 微信分支：先等映射表就绪，命中则播文件，未命中静默推进（不报错不提示）
+    if (this.isWeChat) {
+      const proceed = () => {
+        if (token !== this.lastSpeechToken) return;
+        if (this.ttsFiles.has(text)) {
+          this._speakFromFile(text, opts, token, finish);
+        } else {
+          setTimeout(finish, this._estimateDurationMs(text || ''));
+        }
+      };
+      if (this._ttsReady) this._ttsReady.then(proceed);
+      else proceed();
       return token;
     }
 
@@ -206,10 +216,16 @@ class AudioManager {
     const opts = { rate: 1.1, volume: 1.0, ...options };
     const text = String(word);
 
-    // 微信降级：命中预生成语音映射则用音频文件播放（同样先取消旧语音）
-    if (this.ttsFiles.has(text)) {
-      this.lastSpeechToken++;
-      this._speakFromFile(text, opts, this.lastSpeechToken, () => {});
+    // 微信分支：先等映射表就绪，命中则播文件，未命中静默
+    if (this.isWeChat) {
+      const proceed = () => {
+        this.lastSpeechToken++;
+        if (this.ttsFiles.has(text)) {
+          this._speakFromFile(text, opts, this.lastSpeechToken, () => {});
+        }
+      };
+      if (this._ttsReady) this._ttsReady.then(proceed);
+      else proceed();
       return;
     }
 

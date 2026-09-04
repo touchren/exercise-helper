@@ -513,7 +513,6 @@
   // ---------- 警告与安装提示 ----------
   function showWarning(availability) {
     const problems = [];
-    if (!availability.speechAvailable) problems.push('当前浏览器不支持语音合成，将只使用蜂鸣提示');
     if (!availability.beepAvailable) problems.push('当前浏览器不支持蜂鸣音效');
     if (problems.length === 0) return;
     el.warningText.textContent = problems.join('；');
