@@ -13,13 +13,84 @@ class AudioManager {
     this.beepAvailable = false;
     this.lastSpeechToken = 0;
     this._boundLoadVoices = this._loadVoices.bind(this);
+    // 微信降级：预生成语音映射（text -> url），微信 WebView 不支持 Web Speech API
+    this.ttsFiles = new Map();
+    this.ttsBuffers = new Map();
+    this.currentTtsSource = null;
+    this.isWeChat = typeof navigator !== 'undefined' && /MicroMessenger/i.test(navigator.userAgent);
   }
 
   /** 必须在用户手势（开始按钮）中调用：解锁 AudioContext、加载中文语音。 */
   init() {
     this._initAudioContext();
-    this._initSpeech();
+    if (this.isWeChat) {
+      // 微信内不初始化 speechSynthesis（不可靠），改为加载预生成语音映射
+      this._loadTtsFiles();
+    } else {
+      this._initSpeech();
+    }
     return { speechAvailable: this.speechAvailable, beepAvailable: this.beepAvailable };
+  }
+
+  /** 加载预生成语音映射表（仅微信环境调用）。 */
+  async _loadTtsFiles() {
+    try {
+      const res = await fetch('../tts/manifest.json', { cache: 'no-cache' });
+      if (!res.ok) throw new Error(`manifest 加载失败: ${res.status}`);
+      const entries = await res.json();
+      for (const entry of entries) {
+        this.ttsFiles.set(entry.text, '../' + entry.file);
+      }
+      console.info(`[audio] 预生成语音就绪: ${entries.length} 条`);
+    } catch (err) {
+      console.warn('[audio] 预生成语音加载失败，微信内语音将静默', err);
+    }
+  }
+
+  /** 用 Web Audio 播放预生成语音文件（微信降级）。 */
+  async _speakFromFile(text, opts, token, finish) {
+    try {
+      if (this.currentTtsSource) {
+        try { this.currentTtsSource.stop(); } catch (_) {}
+        this.currentTtsSource = null;
+      }
+      const url = this.ttsFiles.get(text);
+      let buffer = this.ttsBuffers.get(url);
+      if (!buffer) {
+        const res = await fetch(url);
+        if (!res.ok) throw new Error(`音频加载失败: ${res.status}`);
+        buffer = await this.audioCtx.decodeAudioData(await res.arrayBuffer());
+        this.ttsBuffers.set(url, buffer);
+      }
+      if (token !== this.lastSpeechToken) return;
+      this.duckDown();
+      const src = this.audioCtx.createBufferSource();
+      src.buffer = buffer;
+      const gain = this.audioCtx.createGain();
+      gain.gain.value = Math.min(1, Math.max(0, Number(opts.volume) || 1));
+      src.connect(gain);
+      gain.connect(this.audioCtx.destination);
+      this.currentTtsSource = src;
+      src.onended = () => {
+        if (this.currentTtsSource === src) this.currentTtsSource = null;
+        if (token === this.lastSpeechToken) {
+          this.duckUp();
+          finish();
+        }
+      };
+      src.start();
+      // 兜底：防止 onended 不触发导致流程卡住
+      setTimeout(() => {
+        if (token === this.lastSpeechToken) {
+          this.duckUp();
+          finish();
+        }
+      }, this._estimateDurationMs(text) + 2000);
+    } catch (err) {
+      console.warn('[audio] 预生成语音播放失败', err);
+      this.duckUp();
+      setTimeout(finish, 300);
+    }
   }
 
   _initAudioContext() {
@@ -95,6 +166,12 @@ class AudioManager {
       if (typeof opts.onEnd === 'function') opts.onEnd();
     };
 
+    // 微信降级：命中预生成语音映射则用音频文件播放
+    if (this.ttsFiles.has(text)) {
+      this._speakFromFile(text, opts, token, finish);
+      return token;
+    }
+
     if (!this.speechAvailable || !text) {
       setTimeout(finish, this._estimateDurationMs(text || ''));
       return token;
@@ -127,6 +204,15 @@ class AudioManager {
   /** 快速朗读单个数字/短词（用于计数与倒数）。先取消待播语音，防止队列堆积。 */
   speakCount(word, options = {}) {
     const opts = { rate: 1.1, volume: 1.0, ...options };
+    const text = String(word);
+
+    // 微信降级：命中预生成语音映射则用音频文件播放（同样先取消旧语音）
+    if (this.ttsFiles.has(text)) {
+      this.lastSpeechToken++;
+      this._speakFromFile(text, opts, this.lastSpeechToken, () => {});
+      return;
+    }
+
     if (!this.speechAvailable) return;
     try {
       window.speechSynthesis.cancel();
@@ -177,6 +263,10 @@ class AudioManager {
   /** 取消所有排队与播放中的语音。 */
   cancelSpeech() {
     this.lastSpeechToken++;
+    if (this.currentTtsSource) {
+      try { this.currentTtsSource.stop(); } catch (_) {}
+      this.currentTtsSource = null;
+    }
     try {
       if ('speechSynthesis' in window) window.speechSynthesis.cancel();
     } catch (err) {
