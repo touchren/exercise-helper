@@ -4,6 +4,14 @@
  * 两个系统互相独立，可同时发声。
  * 语音失败时用定时器兜底推进流程，绝不无限等待。
  */
+
+// 微信降级：预生成语音的文本→文件映射。
+// 文本必须与 workout-data.js 实际播报文本逐字一致（由 tts/gen-*.js 生成）。
+// 硬编码避免真机微信内 fetch manifest 失败导致映射为空（v44-v46 无声的根因）。
+const TTS_MAP_ENTRIES = [
+  ['开始训练。第一个动作，猫牛流动，8次循环。四点跪撑，双手在肩正下方、双膝在髋正下方。弓背吸气，塌腰呼气，缓慢活动整条脊柱，作为基础热身。', '../tts/evening-open-40bf2d275c74.mp3']
+];
+
 class AudioManager {
   constructor() {
     this.audioCtx = null;
@@ -14,41 +22,24 @@ class AudioManager {
     this.lastSpeechToken = 0;
     this._boundLoadVoices = this._loadVoices.bind(this);
     // 微信降级：预生成语音映射（text -> url），微信 WebView 不支持 Web Speech API
-    this.ttsFiles = new Map();
+    this.ttsFiles = new Map(TTS_MAP_ENTRIES);
     this.currentTtsAudio = null; // 当前播放语音的 <audio> 元素（微信降级用）
+    this.currentTtsSource = null; // 当前播放语音的 BufferSource（解码回退路径用）
     this.isWeChat = typeof navigator !== 'undefined' && /MicroMessenger/i.test(navigator.userAgent);
-    this._ttsReady = null; // 预生成语音映射加载 Promise（微信分支用）
   }
 
   /** 必须在用户手势（开始按钮）中调用：解锁 AudioContext、加载中文语音。 */
   init() {
     this._initAudioContext();
-    if (this.isWeChat) {
-      // 微信内不初始化 speechSynthesis（不可靠），改为加载预生成语音映射
-      this._ttsReady = this._loadTtsFiles().catch(() => {});
-    } else {
+    if (!this.isWeChat) {
       this._initSpeech();
     }
     return { speechAvailable: this.speechAvailable, beepAvailable: this.beepAvailable };
   }
 
-  /** 加载预生成语音映射表（仅微信环境调用）。 */
-  async _loadTtsFiles() {
-    try {
-      const res = await fetch('../tts/manifest.json', { cache: 'no-cache' });
-      if (!res.ok) throw new Error(`manifest 加载失败: ${res.status}`);
-      const entries = await res.json();
-      for (const entry of entries) {
-        this.ttsFiles.set(entry.text, '../' + entry.file);
-      }
-      console.info(`[audio] 预生成语音就绪: ${entries.length} 条`);
-    } catch (err) {
-      console.warn('[audio] 预生成语音加载失败，微信内语音将静默', err);
-    }
-  }
-
   /** 用 <audio> 元素播放预生成语音文件（微信降级）。
-   *  微信 X5/系统 WebView 的 decodeAudioData 对 mp3 不稳定，改用原生 <audio> 播放。 */
+   *  主路径 <audio>（真机已验证可用）；play() 被自动播放策略拒绝时，
+   *  回退 AudioContext 解码播放（手势内已解锁的上下文不受非手势限制）。 */
   async _speakFromFile(text, opts, token, finish) {
     try {
       if (this.currentTtsAudio) {
@@ -86,13 +77,56 @@ class AudioManager {
       try {
         await audio.play();
       } catch (playErr) {
-        console.warn('[audio] audio.play() 被拒绝（可能未授权）', playErr);
-        settle();
+        console.warn('[audio] audio.play() 被拒，回退 AudioContext 解码播放', playErr);
+        if (this.currentTtsAudio === audio) this.currentTtsAudio = null;
+        this._playDecoded(url, opts, token, finish);
         return;
       }
       setTimeout(settle, this._estimateDurationMs(text) + 2000);
     } catch (err) {
       console.warn('[audio] 预生成语音播放失败', err);
+      this.duckUp();
+      setTimeout(finish, 300);
+    }
+  }
+
+  /** 回退路径：AudioContext 解码播放 mp3（AudioContext 在开始手势内已解锁）。 */
+  async _playDecoded(url, opts, token, finish) {
+    try {
+      const ac = this.audioCtx;
+      if (!ac) throw new Error('AudioContext 不可用');
+      if (ac.state === 'suspended') await ac.resume();
+      const buf = await fetch(url).then((r) => r.arrayBuffer());
+      const audioBuf = await new Promise((resolve, reject) => {
+        try {
+          ac.decodeAudioData(buf, resolve, () => reject(new Error('decodeAudioData 失败')));
+        } catch (err) {
+          reject(err);
+        }
+      });
+      const src = ac.createBufferSource();
+      src.buffer = audioBuf;
+      const gain = ac.createGain();
+      gain.gain.value = Math.min(1, Math.max(0, Number(opts.volume) || 1));
+      src.connect(gain);
+      gain.connect(ac.destination);
+      let settled = false;
+      const settle = () => {
+        if (settled) return;
+        settled = true;
+        if (this.currentTtsSource === src) this.currentTtsSource = null;
+        if (token === this.lastSpeechToken) {
+          this.duckUp();
+          finish();
+        }
+      };
+      src.onended = settle;
+      this.currentTtsSource = src;
+      this.duckDown();
+      src.start();
+      setTimeout(settle, this._estimateDurationMs('') + 2000);
+    } catch (err) {
+      console.warn('[audio] 解码播放失败', err);
       this.duckUp();
       setTimeout(finish, 300);
     }
@@ -171,18 +205,13 @@ class AudioManager {
       if (typeof opts.onEnd === 'function') opts.onEnd();
     };
 
-    // 微信分支：先等映射表就绪，命中则播文件，未命中静默推进（不报错不提示）
+    // 微信分支：命中预生成语音则播文件，未命中静默推进（不报错不提示）
     if (this.isWeChat) {
-      const proceed = () => {
-        if (token !== this.lastSpeechToken) return;
-        if (this.ttsFiles.has(text)) {
-          this._speakFromFile(text, opts, token, finish);
-        } else {
-          setTimeout(finish, this._estimateDurationMs(text || ''));
-        }
-      };
-      if (this._ttsReady) this._ttsReady.then(proceed);
-      else proceed();
+      if (this.ttsFiles.has(text)) {
+        this._speakFromFile(text, opts, token, finish);
+      } else {
+        setTimeout(finish, this._estimateDurationMs(text || ''));
+      }
       return token;
     }
 
@@ -220,16 +249,12 @@ class AudioManager {
     const opts = { rate: 1.1, volume: 1.0, ...options };
     const text = String(word);
 
-    // 微信分支：先等映射表就绪，命中则播文件，未命中静默
+    // 微信分支：命中预生成语音则播文件，未命中静默
     if (this.isWeChat) {
-      const proceed = () => {
-        this.lastSpeechToken++;
-        if (this.ttsFiles.has(text)) {
-          this._speakFromFile(text, opts, this.lastSpeechToken, () => {});
-        }
-      };
-      if (this._ttsReady) this._ttsReady.then(proceed);
-      else proceed();
+      this.lastSpeechToken++;
+      if (this.ttsFiles.has(text)) {
+        this._speakFromFile(text, opts, this.lastSpeechToken, () => {});
+      }
       return;
     }
 
@@ -287,6 +312,10 @@ class AudioManager {
       try { this.currentTtsAudio.pause(); } catch (_) {}
       try { this.currentTtsAudio.currentTime = 0; } catch (_) {}
       this.currentTtsAudio = null;
+    }
+    if (this.currentTtsSource) {
+      try { this.currentTtsSource.stop(); } catch (_) {}
+      this.currentTtsSource = null;
     }
     try {
       if ('speechSynthesis' in window) window.speechSynthesis.cancel();

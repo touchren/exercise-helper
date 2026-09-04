@@ -3,7 +3,7 @@
  * 缓存优先策略：首次访问后全量离线可用。
  * 版本号变更时激活阶段清理旧缓存。
  */
-const CACHE_NAME = 'morning-v46';
+const CACHE_NAME = 'morning-v48';
 
 const APP_SHELL = [
   './',
@@ -17,6 +17,7 @@ const APP_SHELL = [
   './settings.js',
   './records.js',
   './app.js',
+  './tts-test.js',
   './manifest.json',
   './icon.svg',
   '../tts/manifest.json'
