@@ -1,0 +1,351 @@
+/* ============================================================
+   styles-secondary.css — 设置屏与记录屏样式
+   ============================================================ */
+
+/* ---------- 滚动区 ---------- */
+.scroll-area {
+  flex: 1;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  padding-bottom: 8px;
+  -webkit-overflow-scrolling: touch;
+  background: var(--bg);
+}
+
+/* ---------- 卡片 ---------- */
+.card {
+  background: var(--bg-elev);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 18px;
+}
+
+.card h2 {
+  font-size: 15px;
+  font-weight: 700;
+  color: var(--accent-soft);
+  margin-bottom: 14px;
+  letter-spacing: 0.05em;
+}
+
+/* ---------- 设置字段行 ---------- */
+.field-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  min-height: 52px;
+  font-size: 15px;
+  border-top: 1px solid var(--border);
+}
+
+.field-row:first-of-type {
+  border-top: none;
+}
+
+.field-row input[type="number"] {
+  width: 84px;
+  min-height: 44px;
+  border-radius: 12px;
+  border: 1px solid var(--border);
+  background: var(--bg-soft);
+  color: var(--text);
+  font-size: 16px;
+  font-family: var(--font);
+  text-align: center;
+}
+
+.field-row input[type="number"]:focus {
+  outline: 2px solid var(--accent);
+  outline-offset: 1px;
+}
+
+.field-row input[type="range"] {
+  flex: 1;
+  accent-color: var(--accent);
+  min-height: 44px;
+}
+
+.field-row input[type="checkbox"] {
+  width: 24px;
+  height: 24px;
+  accent-color: var(--accent);
+  cursor: pointer;
+}
+
+.field-row select {
+  min-height: 44px;
+  border-radius: 12px;
+  border: 1px solid var(--border);
+  background: var(--bg-soft);
+  color: var(--text);
+  font-size: 15px;
+  font-family: var(--font);
+  padding: 0 12px;
+  min-width: 160px;
+  text-align: center;
+}
+
+.field-row select:focus {
+  outline: 2px solid var(--accent);
+  outline-offset: 1px;
+}
+
+.field-value {
+  min-width: 34px;
+  text-align: right;
+  color: var(--accent-soft);
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+}
+
+.ex-config {
+  border-top: 1px solid var(--border);
+  padding-top: 12px;
+  margin-top: 12px;
+}
+
+.ex-config:first-of-type {
+  border-top: none;
+  padding-top: 0;
+  margin-top: 0;
+}
+
+.ex-config h3 {
+  font-size: 14.5px;
+  font-weight: 600;
+  margin-bottom: 2px;
+  color: var(--text);
+}
+
+.note {
+  font-size: 12.5px;
+  line-height: 1.7;
+  color: var(--text-faint);
+  background: rgba(245, 197, 66, 0.07);
+  border: 1px solid rgba(245, 197, 66, 0.22);
+  border-radius: 14px;
+  padding: 12px 16px;
+}
+
+/* ---------- 记录 ---------- */
+.week-card {
+  background:
+    radial-gradient(320px 130px at 90% -20%, rgba(255, 120, 71, 0.28), transparent 70%),
+    var(--bg-elev);
+}
+
+.week-card h2 {
+  margin-bottom: 8px;
+}
+
+.week-stat-line {
+  font-size: 17px;
+  font-weight: 700;
+}
+
+.week-stat-sub {
+  margin-top: 6px;
+  font-size: 12.5px;
+  color: var(--text-dim);
+}
+
+.records-list {
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.record-item {
+  background: var(--bg-elev);
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  padding: 14px 16px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+}
+
+.record-date {
+  font-size: 15px;
+  font-weight: 600;
+}
+
+.record-detail {
+  font-size: 13px;
+  color: var(--text-dim);
+}
+
+.record-tag {
+  display: inline-block;
+  font-size: 11px;
+  font-weight: 600;
+  padding: 1px 8px;
+  border-radius: 999px;
+  margin-right: 6px;
+  vertical-align: middle;
+}
+
+.record-tag.tag-full {
+  background: rgba(255, 120, 71, 0.15);
+  color: var(--accent-soft);
+  border: 1px solid rgba(255, 120, 71, 0.3);
+}
+
+.record-tag.tag-stretch {
+  background: rgba(62, 207, 142, 0.12);
+  color: var(--green);
+  border: 1px solid rgba(62, 207, 142, 0.3);
+}
+
+.record-empty {
+  text-align: center;
+  color: var(--text-faint);
+  padding: 36px 0;
+  font-size: 14px;
+}
+
+.btn-danger-soft {
+  color: var(--red);
+  border-color: rgba(224, 82, 82, 0.35);
+}
+
+/* ---------- 通用按钮变体 ---------- */
+.btn-secondary {
+  background: var(--bg-elev);
+  border: 1px solid var(--border);
+  color: var(--text);
+}
+
+.btn-danger {
+  background: linear-gradient(135deg, #ee6a6a 0%, #c73e3e 100%);
+  color: #2b0808;
+}
+
+.btn-mini {
+  min-height: 40px;
+  border-radius: 12px;
+  font-size: 14px;
+  padding: 0 16px;
+}
+
+.btn-accent {
+  background: linear-gradient(135deg, var(--accent-soft), var(--accent));
+  color: #2b1207;
+}
+
+.btn-ghost {
+  background: transparent;
+  border: 1px solid var(--border);
+  color: var(--text-dim);
+}
+
+/* ---------- 横幅（流式布局，位于控制按钮上方，不遮挡任何操作） ---------- */
+.banner {
+  width: 100%;
+  background: var(--bg-soft);
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  padding: 14px 16px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 12px;
+  animation: banner-in 0.3s ease both;
+}
+
+@keyframes banner-in {
+  from {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+.banner-text {
+  font-size: 13.5px;
+  line-height: 1.5;
+  flex: 1;
+}
+
+.banner-actions {
+  display: flex;
+  gap: 8px;
+  flex-shrink: 0;
+}
+
+.banner-warn {
+  background: rgba(224, 82, 82, 0.12);
+  border-color: rgba(224, 82, 82, 0.4);
+}
+
+/* ---------- 确认弹窗 ---------- */
+.modal {
+  position: fixed;
+  inset: 0;
+  background: rgba(6, 6, 14, 0.72);
+  backdrop-filter: blur(6px);
+  -webkit-backdrop-filter: blur(6px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 50;
+  padding: 24px;
+  animation: fade-in 0.2s ease both;
+}
+
+@keyframes fade-in {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+.modal-card {
+  width: 100%;
+  max-width: 340px;
+  background: var(--bg-elev);
+  border: 1px solid var(--border);
+  border-radius: 22px;
+  padding: 26px 22px 20px;
+  box-shadow: 0 24px 64px rgba(0, 0, 0, 0.6);
+  animation: pop-in 0.25s cubic-bezier(0.2, 1.4, 0.4, 1) both;
+}
+
+@keyframes pop-in {
+  from {
+    opacity: 0;
+    transform: scale(0.92);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+.modal-text {
+  font-size: 16px;
+  line-height: 1.7;
+  margin-bottom: 22px;
+  text-align: center;
+}
+
+.modal-actions {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+}
+
+.modal-actions .btn {
+  min-height: 52px;
+}

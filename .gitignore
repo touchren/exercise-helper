@@ -1,0 +1,22 @@
+# 测试产物
+.playwright-mcp/
+
+# 运行数据
+.sisyphus/
+
+# AI 开发助手配置
+AGENTS.md
+.sisyphus*
+.cursor/
+.cursorrules
+CLAUDE.md
+
+# 内部部署脚本（含服务器信息，不上传 GitHub）
+deploy.sh
+
+# 本地备案信息配置（filing.example.js 为可上传模板）
+filing.js
+
+# 系统文件
+.DS_Store
+Thumbs.db

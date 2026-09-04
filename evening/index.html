@@ -1,0 +1,213 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#1a1a2e">
+  <meta name="description" content="饭后半小时后20分钟锻炼：纯语音引导的晚练助手">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="晚练">
+  <title>晚练</title>
+  <link rel="manifest" href="manifest.json">
+  <link rel="icon" type="image/svg+xml" href="icon.svg">
+  <link rel="apple-touch-icon" href="icon.svg">
+  <link rel="stylesheet" href="styles.css">
+  <link rel="stylesheet" href="styles-secondary.css">
+</head>
+<body>
+  <div id="app">
+    <!-- ============ 主屏幕 ============ -->
+    <section id="screen-main" class="screen active">
+      <header class="topbar">
+        <button id="btn-back-home" class="icon-btn back-btn" aria-label="返回运动选择">
+          <svg viewBox="0 0 24 24" width="24" height="24" aria-hidden="true">
+            <path d="M15.5 4.5 8 12l7.5 7.5" stroke="currentColor" stroke-width="2.4" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+          </svg>
+        </button>
+        <div class="topbar-title">
+          <h1 class="app-title">晚练</h1>
+          <p class="app-subtitle">语音引导 · 无需看屏幕</p>
+        </div>
+        <nav class="topbar-actions">
+          <button id="btn-records" class="icon-btn" aria-label="训练记录">
+            <svg viewBox="0 0 24 24" width="24" height="24" aria-hidden="true">
+              <path d="M5 5h14a1 1 0 0 1 1 1v14a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1V6a1 1 0 0 1 1-1zm2 3v2h10V8H7zm0 4v2h10v-2H7zm0 4v2h7v-2H7z" fill="currentColor"/>
+            </svg>
+          </button>
+          <button id="btn-settings" class="icon-btn" aria-label="设置">
+            <svg viewBox="0 0 24 24" width="24" height="24" aria-hidden="true">
+              <path d="M12 8.5a3.5 3.5 0 1 1 0 7 3.5 3.5 0 0 1 0-7zm9 3.5a8.6 8.6 0 0 0-.08-1l2.02-1.58a.5.5 0 0 0 .12-.64l-1.92-3.32a.5.5 0 0 0-.6-.22l-2.38.96a8.8 8.8 0 0 0-1.73-1L16.06.9a.5.5 0 0 0-.5-.4h-3.84a.5.5 0 0 0-.5.4l-.37 2.7a8.8 8.8 0 0 0-1.73 1l-2.38-.96a.5.5 0 0 0-.6.22L4.22 7.18a.5.5 0 0 0 .12.64L6.36 9.4a8.6 8.6 0 0 0 0 2.02L4.34 13a.5.5 0 0 0-.12.64l1.92 3.32a.5.5 0 0 0 .6.22l2.38-.96a8.8 8.8 0 0 0 1.73 1l.37 2.7a.5.5 0 0 0 .5.4h3.84a.5.5 0 0 0 .5-.4l.37-2.7a8.8 8.8 0 0 0 1.73-1l2.38.96a.5.5 0 0 0 .6-.22l1.92-3.32a.5.5 0 0 0-.12-.64L21.09 13a8.6 8.6 0 0 0-.09-1z" fill="currentColor" transform="translate(-2 -0.5) scale(1.08)"/>
+            </svg>
+          </button>
+        </nav>
+      </header>
+
+      <main class="workout-area">
+        <div class="phase-card">
+          <div class="ring-wrap" id="ring-wrap">
+            <svg class="ring" viewBox="0 0 120 120" aria-hidden="true">
+              <defs>
+                <linearGradient id="ring-gradient" x1="0%" y1="0%" x2="100%" y2="100%">
+                  <stop offset="0%" stop-color="#ffb37e"/>
+                  <stop offset="100%" stop-color="#ff7847"/>
+                </linearGradient>
+              </defs>
+              <circle class="ring-track" cx="60" cy="60" r="54"/>
+              <circle class="ring-progress" id="ring-progress" cx="60" cy="60" r="54"/>
+            </svg>
+            <div class="ring-center">
+              <div id="phase-status" class="phase-status">准备开始</div>
+              <div id="elapsed-time" class="elapsed">00:00</div>
+            </div>
+          </div>
+          <h2 id="phase-name" class="phase-name">晚练准备就绪</h2>
+          <p id="phase-sub" class="phase-sub">全程20分钟 · 抗阻8分钟</p>
+          <div id="mode-switch" class="mode-switch hidden">
+            <div class="mode-btns">
+              <button id="btn-mode-full" type="button" class="mode-btn" data-mode="full">完整训练</button>
+              <button id="btn-mode-stretch" type="button" class="mode-btn" data-mode="stretch">放松</button>
+            </div>
+            <span id="mode-badge" class="mode-badge"></span>
+          </div>
+          <p id="tips" class="tips hidden"></p>
+        </div>
+      </main>
+
+      <!-- 安装提示：流式布局，不遮挡控制按钮 -->
+      <div id="install-banner" class="banner hidden" aria-live="polite">
+        <span class="banner-text">可将应用添加到主屏幕，支持离线使用</span>
+        <div class="banner-actions">
+          <button id="btn-install" class="btn btn-mini btn-accent">安装</button>
+          <button id="btn-install-dismiss" class="btn btn-mini btn-ghost" aria-label="关闭">稍后</button>
+        </div>
+      </div>
+
+      <!-- 语音能力警告 -->
+      <div id="warning-banner" class="banner banner-warn hidden" role="alert">
+        <span class="banner-text" id="warning-text"></span>
+        <button id="btn-warning-dismiss" class="btn btn-mini btn-ghost">知道了</button>
+      </div>
+
+      <footer class="controls">
+        <button id="btn-start" class="btn btn-start">开始</button>
+        <div class="controls-row">
+          <button id="btn-pause" class="btn btn-pause" disabled>暂停</button>
+          <button id="btn-stop" class="btn btn-stop" disabled>结束</button>
+          <button id="btn-skip" class="btn btn-skip" disabled>跳过当前阶段</button>
+        </div>
+      </footer>
+    </section>
+
+    <!-- ============ 设置屏幕 ============ -->
+    <section id="screen-settings" class="screen">
+      <header class="topbar">
+        <button id="btn-back-settings" class="icon-btn back-btn" aria-label="返回">
+          <svg viewBox="0 0 24 24" width="24" height="24" aria-hidden="true">
+            <path d="M15.5 4.5 8 12l7.5 7.5" stroke="currentColor" stroke-width="2.4" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+          </svg>
+        </button>
+        <h1 class="screen-title">设置</h1>
+        <span class="topbar-spacer"></span>
+      </header>
+
+      <div class="version-badge">版本：evening-v33</div>
+
+      <main class="scroll-area">
+        <div class="card">
+          <h2>语音设置</h2>
+          <label class="field-row slider-row">
+            <span>语音速度</span>
+            <input type="range" id="setting-rate" min="0.8" max="1.2" step="0.1" aria-label="语音速度">
+            <span id="rate-value" class="field-value">1.0</span>
+          </label>
+          <label class="field-row slider-row">
+            <span>语音音量</span>
+            <input type="range" id="setting-volume" min="0" max="1" step="0.1" aria-label="语音音量">
+            <span id="volume-value" class="field-value">1.0</span>
+          </label>
+          <label class="field-row">
+            <span>结束提醒秒数</span>
+            <input type="number" id="setting-beep" min="1" max="60" step="1" aria-label="结束提醒秒数">
+          </label>
+        </div>
+
+        <div class="card">
+          <h2>动作参数</h2>
+          <div id="exercise-configs"></div>
+        </div>
+
+        <div class="card">
+          <h2>环境音</h2>
+          <label class="field-row">
+            <span>启用环境音</span>
+            <input type="checkbox" id="setting-ambient-enabled" checked aria-label="启用环境音">
+          </label>
+          <label class="field-row">
+            <span>语音播报时压低背景音</span>
+            <input type="checkbox" id="setting-ambient-ducking" aria-label="语音播报时压低背景音">
+          </label>
+          <label class="field-row">
+            <span>氛围类型</span>
+            <select id="setting-ambient-type" aria-label="氛围类型">
+              <option value="beat">轻节拍（90BPM 鼓点）</option>
+      <option value="dawn">晨曦（低频和弦）</option>
+              <option value="rain">雨声（过滤白噪声）</option>
+            </select>
+          </label>
+          <label class="field-row slider-row">
+            <span>环境音音量</span>
+            <input type="range" id="setting-ambient-volume" min="0" max="1" step="0.1" aria-label="环境音音量">
+            <span id="ambient-volume-value" class="field-value">0.3</span>
+          </label>
+        </div>
+
+        <div class="note">
+          iOS 提示：若手机静音键开启，语音可能无声。请关闭静音后重新开始训练。
+        </div>
+
+        <button id="btn-reset" class="btn btn-secondary">恢复默认</button>
+      </main>
+    </section>
+
+    <!-- ============ 记录屏幕 ============ -->
+    <section id="screen-records" class="screen">
+      <header class="topbar">
+        <button id="btn-back-records" class="icon-btn back-btn" aria-label="返回">
+          <svg viewBox="0 0 24 24" width="24" height="24" aria-hidden="true">
+            <path d="M15.5 4.5 8 12l7.5 7.5" stroke="currentColor" stroke-width="2.4" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+          </svg>
+        </button>
+        <h1 class="screen-title">训练记录</h1>
+        <span class="topbar-spacer"></span>
+      </header>
+
+      <main class="scroll-area">
+        <div class="card week-card" id="week-stats"></div>
+        <ul id="records-list" class="records-list"></ul>
+        <button id="btn-clear-records" class="btn btn-secondary btn-danger-soft">清空记录</button>
+      </main>
+    </section>
+
+    <!-- ============ 确认弹窗 ============ -->
+    <div id="modal-confirm" class="modal hidden" role="dialog" aria-modal="true">
+      <div class="modal-card">
+        <p id="modal-text" class="modal-text"></p>
+        <div class="modal-actions">
+          <button id="btn-confirm-no" class="btn btn-secondary">取消</button>
+          <button id="btn-confirm-yes" class="btn btn-danger">确认</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script src="workout-data.js"></script>
+  <script src="storage.js"></script>
+  <script src="audio.js"></script>
+  <script src="engine.js"></script>
+  <script src="settings.js"></script>
+  <script src="records.js"></script>
+  <script src="app.js"></script>
+</body>
+</html>

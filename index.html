@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#1a1a2e">
+  <meta name="description" content="语音引导的居家训练助手：选择晨练或晚练，按时间段自动进入">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="运动助手">
+  <title>运动助手</title>
+  <link rel="manifest" href="manifest.json">
+  <link rel="icon" type="image/svg+xml" href="icon.svg">
+  <link rel="apple-touch-icon" href="icon.svg">
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <div id="app">
+    <!-- ============ 主屏幕：运动列表 ============ -->
+    <section id="screen-main" class="screen active">
+      <header class="topbar">
+        <div class="topbar-title">
+          <h1 class="app-title">运动选择</h1>
+          <p class="app-subtitle">语音引导 · 闭眼跟练 · 自动排休息日</p>
+        </div>
+        <nav class="topbar-actions">
+          <button id="btn-settings" class="icon-btn" aria-label="设置">
+            <svg viewBox="0 0 24 24" width="24" height="24" aria-hidden="true">
+              <path d="M12 8.5a3.5 3.5 0 1 1 0 7 3.5 3.5 0 0 1 0-7zm9 3.5a8.6 8.6 0 0 0-.08-1l2.02-1.58a.5.5 0 0 0 .12-.64l-1.92-3.32a.5.5 0 0 0-.6-.22l-2.38.96a8.8 8.8 0 0 0-1.73-1L16.06.9a.5.5 0 0 0-.5-.4h-3.84a.5.5 0 0 0-.5.4l-.37 2.7a8.8 8.8 0 0 0-1.73 1l-2.38-.96a.5.5 0 0 0-.6.22L4.22 7.18a.5.5 0 0 0 .12.64L6.36 9.4a8.6 8.6 0 0 0 0 2.02L4.34 13a.5.5 0 0 0-.12.64l1.92 3.32a.5.5 0 0 0 .6.22l2.38-.96a8.8 8.8 0 0 0 1.73 1l.37 2.7a.5.5 0 0 0 .5.4h3.84a.5.5 0 0 0 .5-.4l.37-2.7a8.8 8.8 0 0 0 1.73-1l2.38.96a.5.5 0 0 0 .6-.22l1.92-3.32a.5.5 0 0 0-.12-.64L21.09 13a8.6 8.6 0 0 0-.09-1z" fill="currentColor" transform="translate(-2 -0.5) scale(1.08)"/>
+            </svg>
+          </button>
+        </nav>
+      </header>
+
+      <main class="scroll-area">
+        <div id="workout-list" class="workout-list"></div>
+
+        <div class="auto-section">
+          <label class="auto-row">
+            <span class="auto-text">
+              <span class="auto-title">根据时间段自动进入</span>
+              <span class="auto-hint">在对应时段打开应用将直接进入训练</span>
+            </span>
+            <input type="checkbox" id="chk-auto-match" aria-label="根据时间段自动进入">
+          </label>
+        </div>
+      </main>
+    </section>
+
+    <!-- ============ 设置屏幕：时间段配置 ============ -->
+    <section id="screen-settings" class="screen">
+      <header class="topbar">
+        <button id="btn-back" class="icon-btn back-btn" aria-label="返回">
+          <svg viewBox="0 0 24 24" width="24" height="24" aria-hidden="true">
+            <path d="M15.5 4.5 8 12l7.5 7.5" stroke="currentColor" stroke-width="2.4" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+          </svg>
+        </button>
+        <h1 class="screen-title">时间段设置</h1>
+        <span class="topbar-spacer"></span>
+      </header>
+
+      <main class="scroll-area">
+        <div id="settings-groups" class="settings-groups"></div>
+
+        <div class="card">
+          <h2>训练节奏</h2>
+          <label class="field-row">
+            <span>隔天抗阻（自动切换放松日）</span>
+            <input type="checkbox" id="chk-alternate-days" aria-label="隔天抗阻">
+          </label>
+        </div>
+
+        <div class="note">
+          跨午夜的时间段自动支持（如 22:00 - 02:00）。
+        </div>
+
+        <button id="btn-reset" class="btn btn-secondary">恢复默认</button>
+      </main>
+    </section>
+
+    <!-- ============ 确认弹窗（替代 alert/confirm） ============ -->
+    <div id="modal-confirm" class="modal hidden" role="dialog" aria-modal="true">
+      <div class="modal-card">
+        <p id="modal-text" class="modal-text"></p>
+        <div class="modal-actions">
+          <button id="btn-confirm-no" class="btn btn-secondary">取消</button>
+          <button id="btn-confirm-yes" class="btn btn-danger">确认</button>
+        </div>
+      </div>
+    </div>
+
+    <footer class="app-footer">
+      <div class="footer-version" id="footer-version"></div>
+      <div id="filing-container"></div>
+    </footer>
+  </div>
+
+  <script src="filing.js"></script>
+  <script src="workouts.js"></script>
+  <script src="storage.js"></script>
+  <script src="app.js"></script>
+</body>
+</html>
