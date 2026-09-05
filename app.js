@@ -6,7 +6,7 @@
 (() => {
   'use strict';
 
-  const APP_VERSION = 'workout-selector-v33-260904103421';
+  const APP_VERSION = 'workout-selector-v64-260905134541';
 
   // ---------- DOM 引用 ----------
   const $ = (id) => document.getElementById(id);
@@ -15,6 +15,7 @@
     list: $('workout-list'),
     autoCheckbox: $('chk-auto-match'),
     alternateCheckbox: $('chk-alternate-days'),
+    debugCheckbox: $('chk-debug-window'),
     settingsGroups: $('settings-groups'),
     btnSettings: $('btn-settings'),
     btnBack: $('btn-back'),
@@ -70,6 +71,17 @@
   el.btnSettings.addEventListener('click', () => showScreen('settings'));
   el.btnBack.addEventListener('click', () => showScreen('main'));
 
+  // Android 返回手势拦截：处于 settings 时返回仅关闭面板
+  if (window.history && window.history.pushState) {
+    window.history.pushState({ modal: 'settings' }, '');
+    window.addEventListener('popstate', (event) => {
+      if (el.screens.settings.classList.contains('active')) {
+        showScreen('main');
+        window.history.pushState({ modal: 'main' }, '');
+      }
+    });
+  }
+
   // ---------- 确认弹窗（替代 alert/confirm） ----------
   let confirmHandler = null;
   function showConfirm(text, onYes) {
@@ -100,6 +112,7 @@
   function renderMain() {
     el.autoCheckbox.checked = Boolean(config.autoMatchEnabled);
     el.alternateCheckbox.checked = config.alternateDays !== false;
+    el.debugCheckbox.checked = Boolean(config.debugWindow);
     el.list.innerHTML = WORKOUT_REGISTRY.map((workout) => {
       const schedule = config.workouts[workout.id] && config.workouts[workout.id].schedule;
       const dayBadge = dayBadgeHtml(workout.id);
@@ -213,6 +226,12 @@
 
   el.alternateCheckbox.addEventListener('change', () => {
     config = { ...config, alternateDays: el.alternateCheckbox.checked };
+    saveConfig();
+    renderMain();
+  });
+
+  el.debugCheckbox.addEventListener('change', () => {
+    config = { ...config, debugWindow: el.debugCheckbox.checked };
     saveConfig();
     renderMain();
   });

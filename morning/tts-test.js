@@ -16,13 +16,17 @@
   'use strict';
 
   var TEXT = '测试语音。一二三。';
-  var DIAG_VERSION = 'v59';
+  var DIAG_VERSION = 'v60';
   var logLines = [];
   var ctx = null;
 
-  // 仅在微信环境显示本调试面板：非微信走原生 speechSynthesis 正常工作，无需诊断
-  var _isWeChatEnv = typeof navigator !== 'undefined' && /MicroMessenger/i.test(navigator.userAgent || '');
-  if (!_isWeChatEnv) return;
+  // 仅在选择页设置中开启「调试窗口」时才显示本面板（排障用，日常关闭）
+  // 开启路径：选择页 → 设置 → 调试 → 开启调试窗口（写 workout-selector:config.debugWindow）
+  var _cfg = null;
+  try {
+    _cfg = JSON.parse(localStorage.getItem('workout-selector:config') || '{}');
+  } catch (e) { _cfg = {}; }
+  if (_cfg.debugWindow !== true) return;
 
   function getCtx() {
     if (!ctx) {
@@ -169,7 +173,7 @@
     var panel = document.createElement('div');
     panel.id = 'tts-test-panel';
     panel.style.cssText = [
-      'position:fixed;top:8px;left:8px;z-index:99999;',
+      'position:fixed;top:60px;left:8px;z-index:99999;',
       'background:rgba(18,18,28,0.96);border:1px solid #555;border-radius:10px;',
       'padding:10px 12px;color:#eee;font:12px/1.5 -apple-system,sans-serif;',
       'max-width:320px;max-height:92vh;overflow-y:auto;box-shadow:0 4px 16px rgba(0,0,0,.5);'

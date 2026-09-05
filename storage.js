@@ -15,6 +15,7 @@ const Storage = (() => {
   const DEFAULT_CONFIG = {
     autoMatchEnabled: false,
     alternateDays: true,
+    debugWindow: false,
     workouts: Object.fromEntries(
       WORKOUT_REGISTRY.map((w) => [w.id, { schedule: { ...(w.schedule || {}) } }])
     )
@@ -56,6 +57,7 @@ const Storage = (() => {
     const merged = { ...base, ...stored };
     merged.autoMatchEnabled = Boolean(merged.autoMatchEnabled);
     merged.alternateDays = merged.alternateDays !== false;
+    merged.debugWindow = Boolean(merged.debugWindow);
 
     const storedWorkouts =
       (stored.workouts && typeof stored.workouts === 'object') ? stored.workouts : {};

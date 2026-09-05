@@ -63,6 +63,10 @@
       <main class="scroll-area">
         <div id="settings-groups" class="settings-groups"></div>
 
+        <div class="note">
+          跨午夜的时间段自动支持（如 22:00 - 02:00）。
+        </div>
+
         <div class="card">
           <h2>训练节奏</h2>
           <label class="field-row">
@@ -71,8 +75,12 @@
           </label>
         </div>
 
-        <div class="note">
-          跨午夜的时间段自动支持（如 22:00 - 02:00）。
+        <div class="card">
+          <h2>调试</h2>
+          <label class="field-row">
+            <span>开启调试窗口（排障用，日常建议关闭）</span>
+            <input type="checkbox" id="chk-debug-window" aria-label="开启调试窗口">
+          </label>
         </div>
 
         <button id="btn-reset" class="btn btn-secondary">恢复默认</button>
