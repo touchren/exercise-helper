@@ -3,7 +3,7 @@
  * 缓存优先策略：首次访问后全量离线可用。
  * 版本号变更时激活阶段清理旧缓存。
  */
-const CACHE_NAME = 'evening-v48';
+const CACHE_NAME = 'evening-v62';
 
 const APP_SHELL = [
   './',
@@ -18,8 +18,7 @@ const APP_SHELL = [
   './records.js',
   './app.js',
   './manifest.json',
-  './icon.svg',
-  '../tts/manifest.json'
+  './icon.svg'
 ];
 
 self.addEventListener('install', (event) => {
@@ -45,11 +44,13 @@ self.addEventListener('fetch', (event) => {
     return;
   }
 
-  // tts manifest 走网络优先：新增语音文件后无需升版本即可生效
-  if (event.request.url.includes('/tts/manifest.json')) {
+  // JS 文件走网络优先：历史根因——真机微信 SW 缓存把 audio.js 卡在旧版，
+  // 导致代码改动长期不生效。JS 逻辑更新必须及时生效，故绕过 cache-first。
+  if (new URL(event.request.url).pathname.endsWith('.js')) {
     event.respondWith(
       fetch(event.request)
         .then((response) => {
+          if (!response || response.status !== 200) return response;
           const clone = response.clone();
           caches.open(CACHE_NAME).then((cache) => cache.put(event.request, clone)).catch(() => {});
           return response;

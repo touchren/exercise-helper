@@ -5,12 +5,84 @@
  * 语音失败时用定时器兜底推进流程，绝不无限等待。
  */
 
-// 微信降级：预生成语音的文本→文件映射。
+// 当前音色（tts/ 下的子文件夹名）。切换音色：把同名字的 mp3 放进新文件夹，只改此常量。
+const TTS_VOICE = 'xiaoxiao';
+
+/** 拼接预生成语音完整相对路径：tts/{音色}/{文件名}。 */
+function _ttsUrl(file) {
+  return '../tts/' + TTS_VOICE + '/' + file;
+}
+
+// 微信降级：预生成语音的文本→文件映射（只存文件名，路径由 TTS_VOICE 拼接）。
 // 文本必须与 workout-data.js 实际播报文本逐字一致（由 tts/gen-*.js 生成）。
 // 硬编码避免真机微信内 fetch manifest 失败导致映射为空（v44-v46 无声的根因）。
 const TTS_MAP_ENTRIES = [
-  ['开始训练。第一个动作，猫牛流动，8次循环。四点跪撑，双手在肩正下方、双膝在髋正下方。弓背吸气，塌腰呼气，缓慢活动整条脊柱，作为基础热身。', '../tts/evening-open-40bf2d275c74.mp3']
+  ['开始训练。第一个动作，猫牛流动，8次循环。四点跪撑，双手在肩正下方、双膝在髋正下方。全程用鼻子拱背呼气，塌腰吸气，缓慢活动整条脊柱，幅度适中不猛甩。', 'ann-cat-cow-0-aef18a124ed7.mp3'],
+  ['准备', 'token-0-ddcf6e77b0ee.mp3'],
+  ['3', 'num-3-4e07408562be.mp3'],
+  ['2', 'num-2-d4735e3a265e.mp3'],
+  ['1', 'num-1-6b86b273ff34.mp3'],
+  ['开始', 'token-4-d2bb025a2e51.mp3'],
+  ['吸气', 'breathe-in-15b19641650f.mp3'],
+  ['呼气', 'breathe-out-b2b64efb4d20.mp3'],
+  ['猫牛流动完成。', 'done-cat-cow-03d5abcd79fc.mp3'],
+  ['死虫式，第1组，共3组，每侧10次。全程仰卧，腰背完全贴紧地面，对侧手脚同步缓慢伸展收回，匀速不甩动。先左侧。', 'ann-dead-bug-1-3909596e27a0.mp3'],
+  ['4', 'num-4-4b227777d4dd.mp3'],
+  ['5', 'num-5-ef2d127de37b.mp3'],
+  ['6', 'num-6-e7f6c011776e.mp3'],
+  ['7', 'num-7-7902699be42c.mp3'],
+  ['8', 'num-8-2c624232cdd2.mp3'],
+  ['9', 'num-9-19581e27de7c.mp3'],
+  ['10', 'num-10-4a44dc153642.mp3'],
+  ['换另一侧。', 'trans-switch-side-f9a2e8b0f376.mp3'],
+  ['第1组完成，休息30秒。', 'rest-1-30-fc68176359f9.mp3'],
+  ['剩余10秒', 'remain-10-1d394feb2ed7.mp3'],
+  ['第2组完成，休息30秒。', 'rest-2-30-6b8d3accffd7.mp3'],
+  ['仰卧单膝抱胸，每侧保持30秒。双手轻抱单膝拉向胸口，对侧腿自然伸直贴地，温和牵拉下腰背，请勿暴力猛拉。先左侧。', 'ann-apanasana-0-10b4ab089b73.mp3'],
+  ['仰卧单膝抱胸完成。', 'done-apanasana-3bd9e8d98ed9.mp3'],
+  ['臀桥，第1组，共3组，12次。仰卧屈膝，脚跟踩地与肩同宽，收紧臀部向上顶髋至肩髋膝呈一条斜线，顶峰停留1秒，臀部发力，请勿用腰顶起。', 'ann-glute-bridge-1-3abfcb814355.mp3'],
+  ['11', 'num-11-4fc82b26aecb.mp3'],
+  ['12', 'num-12-6b51d431df5d.mp3'],
+  ['婴儿式，保持30秒。跪姿，双膝分开，臀部缓慢坐向脚跟，上身前趴，额头贴垫，放松腰背、髋部及大腿前侧。', 'ann-balasana-0-bdaa5d896e2a.mp3'],
+  ['婴儿式完成。', 'done-balasana-a112650abec4.mp3'],
+  ['俯卧撑，第1组，共3组，10次。手略宽于肩，手肘斜向后45度，身体从头到脚保持一条直线，下放吸气2秒，推起呼气，杜绝塌腰撅屁股。', 'ann-pushup-1-f7e0383abcba.mp3'],
+  ['狮身人面式，保持60秒。俯卧，手肘落在肩膀正下方，前臂贴地，骨盆贴紧垫子，胸口向前上方打开，不刻意挤压腰椎。', 'ann-sphinx-0-a8d78a7d2aa3.mp3'],
+  ['训练结束。本次训练完成，辛苦了。', 'complete-end-43e373f7e81c.mp3'],
+  ['开始训练。第一个动作，猫牛流动，8次循环。四点跪撑，双手在肩正下方、双膝在髋正下方。弓背吸气，塌腰呼气，缓慢活动整条脊柱，作为基础热身。', 'ann-cat-cow-0-40bf2d275c74.mp3'],
+  ['靠墙天使，15次。后背、后脑勺、臀部贴墙，双脚离墙约10厘米。手臂弯曲90度贴墙，缓慢向上滑动再落下。全程保持下背贴墙，不要耸肩、不要挺腰。', 'ann-wall-angel-1-98210f794c9c.mp3'],
+  ['13', 'num-13-3fdba35f04dc.mp3'],
+  ['14', 'num-14-8527a891e224.mp3'],
+  ['15', 'num-15-e629fa6598d7.mp3'],
+  ['单杠离心下放，第1组，共3组，3次。跳上单杠，握距略宽于肩，核心收紧保持身体稳定。匀速缓慢下放身体，控制3到5秒落至最低点。全程不要塌腰晃荡、不要用腰腹摆动借力。', 'ann-eccentric-pullup-1-6a0f984e97ae.mp3'],
+  ['第1组完成，休息45秒。', 'rest-1-45-2502f362980f.mp3'],
+  ['第2组完成，休息45秒。', 'rest-2-45-25f96784a782.mp3'],
+  ['门框胸肩拉伸。前臂贴门框，手肘与肩同高。向前迈一步，胸口向前打开，感受胸肩前侧牵拉。不要耸肩、不要过度挺腰。', 'ann-doorframe-stretch-0-9d04bae02b40.mp3'],
+  ['休息15秒。', 'rest-x-15-82338424c733.mp3'],
+  ['门框胸肩拉伸完成。', 'done-doorframe-stretch-baec783936bc.mp3'],
+  ['自重深蹲，第1组，共3组，12次。双脚与肩同宽，脚尖微向外。臀部向后坐，膝盖与脚尖同向。腰背挺直，上半身轻微前倾为正常，请勿弯腰驼背塌腰。蹲至大腿接近平行地面即可。', 'ann-bodyweight-squat-1-8a027989e08e.mp3'],
+  ['站立股四头肌拉伸，每侧保持30秒。单脚站立，同侧手抓脚踝，膝盖向后指向地面。骨盆保持中立，不要前倾、不要歪胯。感受大腿前侧牵拉，扶墙保持平衡。先左侧。', 'ann-standing-quad-stretch-0-ddab54a9f30d.mp3'],
+  ['站立股四头肌拉伸完成。', 'done-standing-quad-stretch-2e03df89af10.mp3'],
+  ['鸟狗式，第1组，共3组，10次每侧。四点支撑，腰背保持平直。对侧手脚同步缓慢伸展，至与背部齐平即可，不要抬太高。全程骨盆不歪斜、腰椎不塌陷，核心持续收紧。先左侧。', 'ann-bird-dog-1-4b7bef35954c.mp3'],
+  ['婴儿式，保持40秒。双膝分开与髋同宽，臀部缓慢坐向脚跟。上身前趴，额头贴垫，手臂向前放松。彻底放松腰背、髋部，平缓呼吸收尾。', 'ann-balasana-0-f6d4cd255f31.mp3'],
 ];
+
+// 稳定前缀兜底：训练参数（如 cycles）可被用户在设置页修改，导致播报文本
+// 与精确 key 不一致而静默无声。动作名（猫牛流动）不可编辑，故用其前缀兜底。
+const TTS_PREFIX_ENTRIES = [
+  ['开始训练。第一个动作，猫牛流动', 'ann-cat-cow-0-40bf2d275c74.mp3']
+];
+
+// 临时调试：写入全局日志数组，由 tts-test 顶部面板展示（验证完删除）
+function _dbg(msg) {
+  var ts = new Date().toLocaleTimeString();
+  var line = '[' + ts + '] ' + msg;
+  try {
+    window.__ttsLogs = window.__ttsLogs || [];
+    window.__ttsLogs.push(line);
+    if (window.__ttsSink) window.__ttsSink(line);
+  } catch (_) {}
+  console.log('[audio-dbg] ' + msg);
+}
 
 class AudioManager {
   constructor() {
@@ -26,6 +98,7 @@ class AudioManager {
     this.currentTtsAudio = null; // 当前播放语音的 <audio> 元素（微信降级用）
     this.currentTtsSource = null; // 当前播放语音的 BufferSource（解码回退路径用）
     this.isWeChat = typeof navigator !== 'undefined' && /MicroMessenger/i.test(navigator.userAgent);
+    _dbg('构造 | isWeChat=' + this.isWeChat + ' ua=' + (typeof navigator !== 'undefined' ? (navigator.userAgent || '').slice(0, 60) : 'n/a'));
   }
 
   /** 必须在用户手势（开始按钮）中调用：解锁 AudioContext、加载中文语音。 */
@@ -34,20 +107,21 @@ class AudioManager {
     if (!this.isWeChat) {
       this._initSpeech();
     }
+    _dbg('init | isWeChat=' + this.isWeChat + ' speechAvail=' + this.speechAvailable + ' beepAvail=' + this.beepAvailable + ' mapSize=' + this.ttsFiles.size);
     return { speechAvailable: this.speechAvailable, beepAvailable: this.beepAvailable };
   }
 
   /** 用 <audio> 元素播放预生成语音文件（微信降级）。
    *  主路径 <audio>（真机已验证可用）；play() 被自动播放策略拒绝时，
    *  回退 AudioContext 解码播放（手势内已解锁的上下文不受非手势限制）。 */
-  async _speakFromFile(text, opts, token, finish) {
+  async _speakFromFile(text, opts, token, finish, urlOverride) {
     try {
       if (this.currentTtsAudio) {
         try { this.currentTtsAudio.pause(); } catch (_) {}
         try { this.currentTtsAudio.currentTime = 0; } catch (_) {}
         this.currentTtsAudio = null;
       }
-      const url = this.ttsFiles.get(text);
+      const url = urlOverride || this.ttsFiles.get(text);
       if (!url) {
         setTimeout(finish, this._estimateDurationMs(text));
         return;
@@ -76,7 +150,9 @@ class AudioManager {
       this.duckDown();
       try {
         await audio.play();
+        _dbg('play-ok | url=' + url + ' vol=' + vol);
       } catch (playErr) {
+        _dbg('play-reject | url=' + url + ' err=' + (playErr.message || playErr));
         console.warn('[audio] audio.play() 被拒，回退 AudioContext 解码播放', playErr);
         if (this.currentTtsAudio === audio) this.currentTtsAudio = null;
         this._playDecoded(url, opts, token, finish);
@@ -84,6 +160,7 @@ class AudioManager {
       }
       setTimeout(settle, this._estimateDurationMs(text) + 2000);
     } catch (err) {
+      _dbg('file-err | err=' + (err.message || err));
       console.warn('[audio] 预生成语音播放失败', err);
       this.duckUp();
       setTimeout(finish, 300);
@@ -124,8 +201,10 @@ class AudioManager {
       this.currentTtsSource = src;
       this.duckDown();
       src.start();
+      _dbg('decoded-ok | url=' + url + ' dur=' + audioBuf.duration);
       setTimeout(settle, this._estimateDurationMs('') + 2000);
     } catch (err) {
+      _dbg('decoded-err | url=' + url + ' err=' + (err.message || err));
       console.warn('[audio] 解码播放失败', err);
       this.duckUp();
       setTimeout(finish, 300);
@@ -193,6 +272,16 @@ class AudioManager {
     return seconds * 1000;
   }
 
+  /** 解析文本对应的语音文件：先精确匹配，再稳定前缀兜底。 */
+  _resolveTtsUrl(text) {
+    const exact = this.ttsFiles.get(text);
+    if (exact) return { url: _ttsUrl(exact), via: 'exact' };
+    for (const [prefix, file] of TTS_PREFIX_ENTRIES) {
+      if (text && text.startsWith(prefix)) return { url: _ttsUrl(file), via: 'prefix' };
+    }
+    return { url: null, via: null };
+  }
+
   /** 朗读中文文本。onEnd 保证只触发一次（onend 或超时兜底）。 */
   speak(text, options = {}) {
     const opts = { rate: 1.0, volume: 1.0, onEnd: null, ...options };
@@ -207,15 +296,21 @@ class AudioManager {
 
     // 微信分支：命中预生成语音则播文件，未命中静默推进（不报错不提示）
     if (this.isWeChat) {
-      if (this.ttsFiles.has(text)) {
-        this._speakFromFile(text, opts, token, finish);
+      const r = this._resolveTtsUrl(text);
+      _dbg('speak | weChat=1 map=' + this.ttsFiles.size + ' via=' + r.via + ' textLen=' + (text || '').length + ' text="' + (text || '').slice(0, 30) + '..."' + (r.url ? ' url=' + r.url : ''));
+      if (r.url) {
+        this._speakFromFile(text, opts, token, finish, r.url);
       } else {
+        var keys = [];
+        this.ttsFiles.forEach(function (v, k) { keys.push('"' + k.slice(0, 25) + '..."'); });
+        _dbg('MISS | 已有keys: ' + JSON.stringify(keys));
         setTimeout(finish, this._estimateDurationMs(text || ''));
       }
       return token;
     }
 
     if (!this.speechAvailable || !text) {
+      _dbg('skip | speechAvail=' + this.speechAvailable + ' text=' + !!text + ' (非微信原生TTS路径)');
       setTimeout(finish, this._estimateDurationMs(text || ''));
       return token;
     }
@@ -252,8 +347,9 @@ class AudioManager {
     // 微信分支：命中预生成语音则播文件，未命中静默
     if (this.isWeChat) {
       this.lastSpeechToken++;
-      if (this.ttsFiles.has(text)) {
-        this._speakFromFile(text, opts, this.lastSpeechToken, () => {});
+      const r = this._resolveTtsUrl(text);
+      if (r.url) {
+        this._speakFromFile(text, opts, this.lastSpeechToken, () => {}, r.url);
       }
       return;
     }
