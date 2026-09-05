@@ -132,10 +132,17 @@ class AudioManager {
       const vol = Math.min(1, Math.max(0, Number(opts.volume) || 1));
       audio.volume = vol;
       let settled = false;
+      let knownDurMs = 0;
+      audio.addEventListener('loadedmetadata', () => {
+        if (Number.isFinite(audio.duration) && audio.duration > 0) {
+          knownDurMs = audio.duration * 1000;
+        }
+      }, { once: true });
       const settle = (reason) => {
         if (settled) return;
         settled = true;
         _dbg('settle | reason=' + (reason || '?') + ' token=' + token + ' curToken=' + this.lastSpeechToken);
+        try { audio.pause(); } catch (_) {}
         if (this.currentTtsAudio === audio) this.currentTtsAudio = null;
         if (token === this.lastSpeechToken) {
           this.duckUp();
@@ -156,10 +163,12 @@ class AudioManager {
         _dbg('play-reject | url=' + url + ' err=' + (playErr.message || playErr));
         console.warn('[audio] audio.play() 被拒，回退 AudioContext 解码播放', playErr);
         if (this.currentTtsAudio === audio) this.currentTtsAudio = null;
-        this._playDecoded(url, opts, token, finish);
+        this._playDecoded(url, opts, token, finish, text);
         return;
       }
-      setTimeout(settle, this._estimateDurationMs(text) + 2000);
+      const estMs = this._estimateDurationMs(text);
+      const safetyMs = Math.max(estMs, knownDurMs) + 1000;
+      setTimeout(settle, safetyMs);
     } catch (err) {
       _dbg('file-err | err=' + (err.message || err));
       console.warn('[audio] 预生成语音播放失败', err);
@@ -169,7 +178,7 @@ class AudioManager {
   }
 
   /** 回退路径：AudioContext 解码播放 mp3（AudioContext 在开始手势内已解锁）。 */
-  async _playDecoded(url, opts, token, finish) {
+  async _playDecoded(url, opts, token, finish, text) {
     try {
       const ac = this.audioCtx;
       if (!ac) throw new Error('AudioContext 不可用');
@@ -203,7 +212,10 @@ class AudioManager {
       this.duckDown();
       src.start();
       _dbg('decoded-ok | url=' + url + ' dur=' + audioBuf.duration);
-      setTimeout(settle, this._estimateDurationMs('') + 2000);
+      const decodedDurMs = (Number.isFinite(audioBuf.duration) && audioBuf.duration > 0)
+        ? audioBuf.duration * 1000
+        : this._estimateDurationMs(text);
+      setTimeout(settle, decodedDurMs + 1000);
     } catch (err) {
       _dbg('decoded-err | url=' + url + ' err=' + (err.message || err));
       console.warn('[audio] 解码播放失败', err);
