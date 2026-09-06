@@ -1,7 +1,7 @@
 {
-  "name": "运动助手",
-  "short_name": "运动助手",
-  "description": "语音引导的居家训练助手",
+  "name": "闻鼓而动",
+  "short_name": "闻鼓",
+  "description": "语音引导的居家训练助手：晨钟暮鼓，闻鼓而练",
   "lang": "zh-CN",
   "start_url": "./",
   "scope": "./",
@@ -21,6 +21,24 @@
       "sizes": "512x512",
       "type": "image/svg+xml",
       "purpose": "maskable"
+    },
+    {
+      "src": "icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "apple-touch-icon.png",
+      "sizes": "180x180",
+      "type": "image/png",
+      "purpose": "any"
     }
   ]
 }

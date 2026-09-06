@@ -40,7 +40,10 @@ class WorkoutEngine {
     this.totalPausedMs = 0;
     this.startTs = Date.now();
     this.state = 'running';
-    this._startStep(0);
+    // 训练开场白：第一个动作 announce 前先播「闻鼓起练」，播完再进入引导
+    const first = this.steps[0];
+    const opening = first && first.type === 'announce' && first.tts.startsWith('开始训练') ? '闻鼓起练' : null;
+    this._startStep(0, opening);
   }
 
   pause() {
@@ -101,7 +104,7 @@ class WorkoutEngine {
     return step.type === 'announce' || step.type === 'transition' || step.type === 'complete';
   }
 
-  _startStep(index) {
+  _startStep(index, preText) {
     const step = this.steps[index];
     if (!step) {
       this._finish();
@@ -113,7 +116,7 @@ class WorkoutEngine {
     this._emitPhase(step);
 
     if (this._isSpeechDriven(step)) {
-      this._runSpeechStep(step);
+      this._runSpeechStep(step, preText);
       return;
     }
     this.stepStartTs = Date.now();
@@ -121,7 +124,7 @@ class WorkoutEngine {
     this._tick();
   }
 
-  _runSpeechStep(step) {
+  _runSpeechStep(step, preText) {
     this.speechStepActive = true;
     const handleDone = () => {
       if (!this.speechStepActive || this.state !== 'running') return;
@@ -132,11 +135,23 @@ class WorkoutEngine {
         this._advanceFromSpeechStep(step);
       }
     };
-    this.audio.speak(step.tts, {
-      rate: this.settings.rate,
-      volume: this.settings.volume,
-      onEnd: handleDone
-    });
+    const speakMain = () => {
+      if (!this.speechStepActive || this.state !== 'running') return;
+      this.audio.speak(step.tts, {
+        rate: this.settings.rate,
+        volume: this.settings.volume,
+        onEnd: handleDone
+      });
+    };
+    if (preText) {
+      this.audio.speak(preText, {
+        rate: this.settings.rate,
+        volume: this.settings.volume,
+        onEnd: speakMain
+      });
+    } else {
+      speakMain();
+    }
   }
 
   _advanceFromSpeechStep(step) {

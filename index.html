@@ -2,18 +2,103 @@
 <html lang="zh-CN">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, minimum-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+  <meta name="format-detection" content="telephone=no">
+  <meta name="x5-orientation" content="portrait">
+  <meta name="screen-orientation" content="portrait">
+  <meta name="x5-page-mode" content="app">
+  <meta name="browsermode" content="application">
+  <style>
+    /* 禁止微信/系统浏览器自动调整字体大小 */
+    html, body {
+      -webkit-text-size-adjust: 100% !important;
+      text-size-adjust: 100% !important;
+      -moz-text-size-adjust: 100% !important;
+    }
+  </style>
+  <script>
+    // 安卓微信强制设置标准字号（fontSize:'2'=100% 标准档；传 0 会被微信当作最小档约 80%，反而缩小字体）
+    (function() {
+      if (typeof WeixinJSBridge === 'object' && typeof WeixinJSBridge.invoke === 'function') {
+        handleFontSize();
+      } else {
+        document.addEventListener('WeixinJSBridgeReady', handleFontSize, false);
+      }
+      function handleFontSize() {
+        try {
+          WeixinJSBridge.invoke('setFontSizeCallback', { fontSize: '2' });
+          WeixinJSBridge.on('menu:setfont', function() {
+            WeixinJSBridge.invoke('setFontSizeCallback', { fontSize: '2' });
+          });
+        } catch (e) {}
+      }
+    })();
+  </script>
+  <script>
+    // 微信 X5 内核会劫持 meta viewport 删参数导致整页缩放，运行时强制重写回标准 viewport
+    (function() {
+      if (!/micromessenger/i.test(navigator.userAgent)) return;
+      var CONTENT = 'width=device-width, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0, user-scalable=no, viewport-fit=cover';
+      function forceViewport() {
+        var meta = document.querySelector('meta[name="viewport"]');
+        if (!meta) {
+          meta = document.createElement('meta');
+          meta.setAttribute('name', 'viewport');
+          document.head.appendChild(meta);
+        }
+        meta.setAttribute('content', CONTENT);
+      }
+      function schedule() {
+        forceViewport();
+        setTimeout(forceViewport, 100);
+        setTimeout(forceViewport, 500);
+        setTimeout(forceViewport, 1000);
+      }
+      if (document.readyState === 'complete') schedule();
+      else document.addEventListener('DOMContentLoaded', schedule);
+      window.addEventListener('load', schedule);
+    })();
+  </script>
+  <script>
+    // 微信 WebView 的 devicePixelRatio 是启动时缓存值（常偏低），不跟随系统「显示大小」，
+    // 导致同样的 CSS px 字体/图标比 Chrome 物理小约 18%。这里对低 DPR 的微信做等比补偿。
+    (function() {
+      try {
+        var ua = navigator.userAgent || '';
+        var isWechat = /micromessenger/i.test(ua);
+        var isAndroid = /android/i.test(ua);
+        var dpr = window.devicePixelRatio || 1;
+        // 仅 Android 微信 X5 内核存在 DPR 启动缓存偏低问题（iOS 微信 DPR 为硬件真实值，无需补偿）
+        if (isWechat && isAndroid && dpr > 0 && dpr < 2.6) {
+          var zoom = 2.75 / dpr;
+          if (zoom > 1.01) {
+            document.documentElement.style.zoom = zoom.toFixed(3);
+          }
+        }
+      } catch (e) { /* 静默 */ }
+    })();
+  </script>
   <meta name="theme-color" content="#1a1a2e">
-  <meta name="description" content="语音引导的居家训练助手：选择晨练或晚练，按时间段自动进入">
+  <meta name="description" content="语音引导的居家训练助手：晨练 18 分钟、晚练 20 分钟，全程语音播报动作要点不用看屏幕；自动排抗阻日/放松日，数据只存本地。">
+  <meta name="keywords" content="语音引导健身,晨练,晚练,居家训练,腰痛康复,PWA">
   <meta name="mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-  <meta name="apple-mobile-web-app-title" content="运动助手">
-  <title>运动助手</title>
+  <meta name="apple-mobile-web-app-title" content="闻鼓而动">
+  <title>闻鼓而动：语音引导晨练晚练｜闭眼跟练的居家健身 PWA</title>
   <link rel="manifest" href="manifest.json">
   <link rel="icon" type="image/svg+xml" href="icon.svg">
-  <link rel="apple-touch-icon" href="icon.svg">
-  <link rel="stylesheet" href="styles.css">
+  <link rel="apple-touch-icon" href="apple-touch-icon.png">
+  <link rel="stylesheet" href="styles.css?v=80">
+  <link rel="canonical" href="https://exercise.touchren.pub/">
+  <meta property="og:type" content="website">
+  <meta property="og:site_name" content="闻鼓而动">
+  <meta property="og:title" content="闻鼓而动：语音引导晨练晚练｜闭眼跟练的居家健身 PWA">
+  <meta property="og:description" content="语音引导的居家训练助手：晨练 18 分钟、晚练 20 分钟，全程语音播报动作要点不用看屏幕；自动排抗阻日/放松日，数据只存本地。">
+  <meta property="og:url" content="https://exercise.touchren.pub/">
+  <meta property="og:image" content="https://exercise.touchren.pub/og-image.png">
+  <meta property="og:locale" content="zh_CN">
+  <meta name="twitter:card" content="summary_large_image">
 </head>
 <body>
   <div id="app">
@@ -21,8 +106,8 @@
     <section id="screen-main" class="screen active">
       <header class="topbar">
         <div class="topbar-title">
-          <h1 class="app-title">运动选择</h1>
-          <p class="app-subtitle">语音引导 · 闭眼跟练 · 自动排休息日</p>
+          <h1 class="app-title">闻鼓而动</h1>
+          <p class="app-subtitle">晨钟暮鼓 · 闻鼓而练</p>
         </div>
         <nav class="topbar-actions">
           <button id="btn-settings" class="icon-btn" aria-label="设置">
@@ -36,15 +121,28 @@
       <main class="scroll-area">
         <div id="workout-list" class="workout-list"></div>
 
-        <div class="auto-section">
-          <label class="auto-row">
-            <span class="auto-text">
-              <span class="auto-title">根据时间段自动进入</span>
-              <span class="auto-hint">在对应时段打开应用将直接进入训练</span>
-            </span>
-            <input type="checkbox" id="chk-auto-match" aria-label="根据时间段自动进入">
-          </label>
-        </div>
+        <section class="seo-faq" aria-label="常见问题">
+          <h2>常见问题</h2>
+          <details><summary>数据会上传到服务器吗？</summary><p>不会。闻鼓而动没有服务器，没有注册和登录。所有设置与训练记录都存储在浏览器本地，不会通过网络发送到任何地方。</p></details>
+          <details><summary>和跟着视频练有什么区别？</summary><p>视频跟练适合学动作，语音引导适合学会以后坚持。一个用来学，一个用来练：全程语音播报动作名称、次数和要点，闭眼跟练不用看屏幕。</p></details>
+          <details><summary>什么是隔天抗阻？</summary><p>肌肉群需要 48 小时恢复，所以抗阻动作隔天做、拉伸动作每天坚持。应用会自动判断今天是抗阻日还是放松日，无需自己计算。</p></details>
+          <div id="faq-more" class="faq-more hidden">
+            <details><summary>可以离线使用吗？</summary><p>可以。首次加载后 Service Worker 会缓存所有资源，之后断网也能正常使用，还能添加到手机主屏幕像原生应用一样运行。</p></details>
+            <details><summary>每天都要练吗？</summary><p>拉伸动作建议每天坚持；抗阻动作隔天做，给肌肉 48 小时恢复。应用会自动判断今天是抗阻日还是放松日，无需自己计算。</p></details>
+            <details><summary>需要什么器械？</summary><p>晨练全程无需器械，一张瑜伽垫即可。晚练只有单杠离心下放需要单杠，没有单杠可以用「跳过当前阶段」按钮跳过，其余动作都无需器械。</p></details>
+            <details><summary>适合久坐腰痛的人吗？</summary><p>方案参考柳叶刀腰痛系列研究（稳定训练、力量训练与牵伸训练的组合）设计，适合久坐人群日常坚持；如正处于急性疼痛或有伤，请先咨询医生。</p></details>
+            <details><summary>动作标准吗？</summary><p>动作清单参考柳叶刀腰痛系列研究的建议（稳定训练、力量训练与牵伸训练的组合），由 AI 辅助细化。建议先跟着视频学会标准动作，再用来日常坚持。</p></details>
+            <details><summary>免费吗？需要注册吗？</summary><p>完全免费，无需注册登录。没有服务器、没有账号、没有数据上传，训练记录只存在你的手机里。</p></details>
+            <details><summary>iOS 上语音没有声音怎么办？</summary><p>检查手机侧边静音键是否打开。iOS 的静音开关会同时静音网页语音播报，关闭静音后重新开始训练即可。</p></details>
+            <div class="faq-about">
+              <h3>关于闻鼓而动</h3>
+              <p>「闻鼓而动」取自古军令「闻鼓而进，闻金而退」——战士听见鼓声即前进。在这里，语音就是鼓声：晨练 7 个动作约 18 分钟，晚练 8 个动作约 20 分钟，两套方案各含约 8 分钟抗阻训练。全程语音播报动作名称、次数和动作要点，听见指令就行动，放下手机闭眼跟练，不用看屏幕。</p>
+              <p>晨钟暮鼓，闻鼓而练。隔天抗阻机制参考肌肉群 48 小时恢复规律：抗阻动作隔天做，拉伸动作每天坚持，应用自动判断今天是抗阻日还是放松日。训练完成自动打卡，周统计一目了然。无需注册登录，训练数据只存在你的手机里，零后端零追踪。</p>
+            </div>
+            <p class="faq-link">延伸：<a href="./guide.html" style="color:#ff7847;">久坐腰痛怎么练：柳叶刀推荐的运动组合</a></p>
+          </div>
+          <button id="btn-faq-more" class="faq-more-btn" type="button">展开更多问题 ↓</button>
+        </section>
       </main>
     </section>
 
@@ -61,6 +159,14 @@
       </header>
 
       <main class="scroll-area">
+        <div class="card">
+          <h2>通用</h2>
+          <label class="field-row">
+            <span>根据时间段自动进入</span>
+            <input type="checkbox" id="chk-auto-match" aria-label="根据时间段自动进入">
+          </label>
+        </div>
+
         <div id="settings-groups" class="settings-groups"></div>
 
         <div class="note">
@@ -104,9 +210,18 @@
     </footer>
   </div>
 
-  <script src="filing.js"></script>
-  <script src="workouts.js"></script>
-  <script src="storage.js"></script>
-  <script src="app.js"></script>
+  <script src="filing.js?v=80"></script>
+  <script src="workouts.js?v=80"></script>
+  <script src="storage.js?v=80"></script>
+  <script src="app.js?v=80"></script>
+  <script type="application/ld+json">
+  {"@context":"https://schema.org","@type":"WebApplication","name":"闻鼓而动","url":"https://exercise.touchren.pub/","applicationCategory":"HealthApplication","operatingSystem":"Web","description":"语音引导的居家训练助手：晨练18分钟、晚练20分钟，闭眼跟练不用看屏幕。晨钟暮鼓，闻鼓而练。","offers":{"@type":"Offer","price":"0","priceCurrency":"CNY"},"featureList":["语音引导","隔天抗阻","本地打卡","PWA离线可用","零追踪"]}
+  </script>
+  <script type="application/ld+json">
+  {"@context":"https://schema.org","@type":"WebSite","name":"闻鼓而动","url":"https://exercise.touchren.pub/","description":"语音引导的居家训练 PWA，含晨练与晚练两套方案"}
+  </script>
+  <script type="application/ld+json">
+  {"@context":"https://schema.org","@type":"FAQPage","mainEntity":[{"@type":"Question","name":"数据会上传到服务器吗？","acceptedAnswer":{"@type":"Answer","text":"不会。闻鼓而动没有服务器，没有注册和登录。所有设置与训练记录都存储在浏览器本地，不会通过网络发送到任何地方。"}},{"@type":"Question","name":"和跟着视频练有什么区别？","acceptedAnswer":{"@type":"Answer","text":"视频跟练适合学动作，语音引导适合学会以后坚持。一个用来学，一个用来练：全程语音播报动作名称、次数和要点，闭眼跟练不用看屏幕。"}},{"@type":"Question","name":"什么是隔天抗阻？","acceptedAnswer":{"@type":"Answer","text":"肌肉群需要 48 小时恢复，所以抗阻动作隔天做、拉伸动作每天坚持。应用会自动判断今天是抗阻日还是放松日，无需自己计算。"}},{"@type":"Question","name":"可以离线使用吗？","acceptedAnswer":{"@type":"Answer","text":"可以。首次加载后 Service Worker 会缓存所有资源，之后断网也能正常使用，还能添加到手机主屏幕像原生应用一样运行。"}},{"@type":"Question","name":"每天都要练吗？","acceptedAnswer":{"@type":"Answer","text":"拉伸动作建议每天坚持；抗阻动作隔天做，给肌肉 48 小时恢复。应用会自动判断今天是抗阻日还是放松日，无需自己计算。"}},{"@type":"Question","name":"需要什么器械？","acceptedAnswer":{"@type":"Answer","text":"晨练全程无需器械，一张瑜伽垫即可。晚练只有单杠离心下放需要单杠，没有单杠可以用「跳过当前阶段」按钮跳过，其余动作都无需器械。"}},{"@type":"Question","name":"适合久坐腰痛的人吗？","acceptedAnswer":{"@type":"Answer","text":"方案参考柳叶刀腰痛系列研究（稳定训练、力量训练与牵伸训练的组合）设计，适合久坐人群日常坚持；如正处于急性疼痛或有伤，请先咨询医生。"}},{"@type":"Question","name":"动作标准吗？","acceptedAnswer":{"@type":"Answer","text":"动作清单参考柳叶刀腰痛系列研究的建议（稳定训练、力量训练与牵伸训练的组合），由 AI 辅助细化。建议先跟着视频学会标准动作，再用来日常坚持。"}},{"@type":"Question","name":"免费吗？需要注册吗？","acceptedAnswer":{"@type":"Answer","text":"完全免费，无需注册登录。没有服务器、没有账号、没有数据上传，训练记录只存在你的手机里。"}},{"@type":"Question","name":"iOS 上语音没有声音怎么办？","acceptedAnswer":{"@type":"Answer","text":"检查手机侧边静音键是否打开。iOS 的静音开关会同时静音网页语音播报，关闭静音后重新开始训练即可。"}}]}
+  </script>
 </body>
 </html>

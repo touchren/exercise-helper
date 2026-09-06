@@ -35,7 +35,8 @@
 
 html,
 body {
-  height: 100%;
+  margin: 0;
+  padding: 0;
 }
 
 body {
@@ -45,8 +46,8 @@ body {
     radial-gradient(1100px 520px at 85% -12%, rgba(255, 120, 71, 0.16), transparent 62%),
     radial-gradient(900px 600px at -20% 108%, rgba(62, 207, 142, 0.08), transparent 55%),
     linear-gradient(175deg, #131326 0%, var(--bg-deep) 46%, #151528 100%);
+  background-attachment: fixed;
   color: var(--text);
-  min-height: 100dvh;
   -webkit-font-smoothing: antialiased;
   overscroll-behavior-y: none;
 }
@@ -54,21 +55,16 @@ body {
 #app {
   max-width: 520px;
   margin: 0 auto;
-  height: 100dvh;
   display: flex;
   flex-direction: column;
   position: relative;
-  overflow: hidden;
 }
 
 /* ---------- 屏幕切换 ---------- */
 .screen {
   display: none;
   flex-direction: column;
-  flex: 1;
-  min-height: 0;
-  overflow: hidden;
-  padding: 16px 18px calc(18px + var(--safe-bottom));
+  padding: 16px 18px calc(64px + var(--safe-bottom));
 }
 
 .screen.active {
@@ -150,13 +146,10 @@ body {
 
 /* ---------- 滚动区 ---------- */
 .scroll-area {
-  flex: 1;
-  overflow-y: auto;
   display: flex;
   flex-direction: column;
   gap: 16px;
   padding: 4px 0 8px;
-  -webkit-overflow-scrolling: touch;
 }
 
 /* ---------- 运动卡片 ---------- */
@@ -300,49 +293,7 @@ body {
   transform: scale(0.94);
 }
 
-/* ---------- 自动进入区域 ---------- */
-.auto-section {
-  background: var(--bg-elev);
-  border: 1px solid var(--border);
-  border-radius: var(--radius);
-  padding: 16px 18px;
-  animation: card-in 0.4s ease 0.12s both;
-}
 
-.auto-row {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 12px;
-  min-height: 44px;
-  cursor: pointer;
-}
-
-.auto-text {
-  display: flex;
-  flex-direction: column;
-  gap: 3px;
-  min-width: 0;
-}
-
-.auto-title {
-  font-size: 15.5px;
-  font-weight: 600;
-}
-
-.auto-hint {
-  font-size: 12px;
-  color: var(--text-faint);
-  line-height: 1.5;
-}
-
-.auto-row input[type="checkbox"] {
-  width: 26px;
-  height: 26px;
-  flex-shrink: 0;
-  accent-color: var(--green);
-  cursor: pointer;
-}
 
 /* ---------- 设置卡片与字段 ---------- */
 .settings-groups {
@@ -528,12 +479,17 @@ input:focus-visible {
 }
 
 .app-footer {
-  flex-shrink: 0;
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  z-index: 10;
   text-align: center;
   font-size: 11px;
   color: var(--text-faint);
   padding: 8px 0 calc(8px + var(--safe-bottom));
-  opacity: 0.7;
+  background: var(--bg-deep);
+  pointer-events: none;
 }
 
 .footer-version {
@@ -580,10 +536,6 @@ input:focus-visible {
     padding: 24px 0;
   }
 
-  #app {
-    height: calc(100dvh - 48px);
-  }
-
   .screen {
     border-radius: 28px;
     border: 1px solid var(--border);
@@ -597,10 +549,93 @@ input:focus-visible {
 }
 
 /* ---------- 减少动效偏好 ---------- */
-@media (prefers-reduced-motion: reduce) {
+  @media (prefers-reduced-motion: reduce) {
   * {
     animation-duration: 0.01ms !important;
     animation-iteration-count: 1 !important;
     transition-duration: 0.01ms !important;
   }
+}
+
+/* ---------- SEO 静态内容区 ---------- */
+.seo-faq {
+  padding: 14px 20px;
+  border-top: 1px solid var(--border);
+}
+
+.seo-faq h2 {
+  font-size: 1.05rem;
+  font-weight: 600;
+  margin: 0 0 10px;
+  color: var(--text);
+}
+
+.seo-faq details {
+  margin-bottom: 8px;
+}
+
+.seo-faq summary {
+  font-size: 0.95rem;
+  font-weight: 500;
+  cursor: pointer;
+  color: var(--text);
+  padding: 3px 0;
+}
+
+.seo-faq details p {
+  font-size: 0.9rem;
+  line-height: 1.7;
+  color: var(--text-dim);
+  margin: 4px 0 8px;
+}
+
+.faq-more-btn {
+  display: block;
+  width: 100%;
+  margin-top: 6px;
+  padding: 10px 0;
+  background: transparent;
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  color: var(--accent-soft);
+  font-family: var(--font);
+  font-size: 13.5px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background 0.15s, border-color 0.15s;
+}
+
+.faq-more-btn:active {
+  background: var(--bg-soft);
+}
+
+.faq-more.hidden {
+  display: none;
+}
+
+.faq-about {
+  margin-top: 14px;
+  padding-top: 14px;
+  border-top: 1px solid var(--border);
+}
+
+.faq-about h3 {
+  font-size: 1rem;
+  font-weight: 600;
+  margin: 0 0 8px;
+  color: var(--text);
+}
+
+.faq-about p {
+  font-size: 0.9rem;
+  line-height: 1.7;
+  color: var(--text-dim);
+  margin: 0 0 10px;
+}
+
+.faq-link {
+  margin-top: 12px;
+  font-size: 0.9rem;
+  color: var(--text-dim);
+  line-height: 1.6;
 }

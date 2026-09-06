@@ -17,6 +17,8 @@ function _ttsUrl(file) {
 // 文本必须与 workout-data.js 实际播报文本逐字一致（由 tts/gen-*.js 生成）。
 // 硬编码避免真机微信内 fetch manifest 失败导致映射为空（v44-v46 无声的根因）。
 const TTS_MAP_ENTRIES = [
+  // 训练开场白：engine.js 在首个 announce 前串行播报，非 step.tts，gen-all.js 不会生成
+  ['闻鼓起练', 'start-wengu-3f2fefb2623a.mp3'],
   ['开始训练。第一个动作，猫牛流动，8次循环。四点跪撑，双手在肩正下方、双膝在髋正下方。全程用鼻子拱背呼气，塌腰吸气，缓慢活动整条脊柱，幅度适中不猛甩。', 'ann-cat-cow-0-aef18a124ed7.mp3'],
   ['准备', 'token-0-ddcf6e77b0ee.mp3'],
   ['3', 'num-3-4e07408562be.mp3'],
@@ -111,9 +113,10 @@ class AudioManager {
     return { speechAvailable: this.speechAvailable, beepAvailable: this.beepAvailable };
   }
 
-  /** 用 <audio> 元素播放预生成语音文件（微信降级）。
-   *  主路径 <audio>（真机已验证可用）；play() 被自动播放策略拒绝时，
-   *  回退 AudioContext 解码播放（手势内已解锁的上下文不受非手势限制）。 */
+  /** 用录音文件播放语音（全环境优先使用录音，音质比原生 TTS 更好）。
+   *  主路径 <audio> 元素（真机已验证可用）；play() 被自动播放策略拒绝时，
+   *  回退 AudioContext 解码播放（手势内已解锁的上下文不受非手势限制）。
+   *  未命中录音且支持原生 TTS 时，回退 SpeechSynthesis 兜底（保证出声音）。 */
   async _speakFromFile(text, opts, token, finish, urlOverride) {
     try {
       if (this.currentTtsAudio) {
@@ -295,7 +298,8 @@ class AudioManager {
     return { url: null, via: null };
   }
 
-  /** 朗读中文文本。onEnd 保证只触发一次（onend 或超时兜底）。 */
+  /** 朗读中文文本。onEnd 保证只触发一次（onend 或超时兜底）。
+   *  统一优先播预生成 mp3（音质稳定），未命中时非微信回退原生 TTS，微信静默推进。 */
   speak(text, options = {}) {
     const opts = { rate: 1.0, volume: 1.0, onEnd: null, ...options };
     const token = ++this.lastSpeechToken;
@@ -309,66 +313,62 @@ class AudioManager {
       if (typeof opts.onEnd === 'function') opts.onEnd();
     };
 
-    // 微信分支：命中预生成语音则播文件，未命中静默推进（不报错不提示）
-    if (this.isWeChat) {
-      const r = this._resolveTtsUrl(text);
-      _dbg('speak | weChat=1 map=' + this.ttsFiles.size + ' via=' + r.via + ' textLen=' + (text || '').length + ' text="' + (text || '').slice(0, 30) + '..."' + (r.url ? ' url=' + r.url : ''));
-      if (r.url) {
-        this._speakFromFile(text, opts, token, finish, r.url);
-      } else {
-        var keys = [];
-        this.ttsFiles.forEach(function (v, k) { keys.push('"' + k.slice(0, 25) + '..."'); });
-        _dbg('MISS | 已有keys: ' + JSON.stringify(keys));
-        setTimeout(finish, this._estimateDurationMs(text || ''));
+    // 主路径：所有环境统一播预生成 mp3（音质稳定，微信/原生体验一致）
+    const r = this._resolveTtsUrl(text);
+    _dbg('speak | map=' + this.ttsFiles.size + ' via=' + r.via + ' textLen=' + (text || '').length + ' text="' + (text || '').slice(0, 30) + '..."' + (r.url ? ' url=' + r.url : ''));
+    if (r.url) {
+      this._speakFromFile(text, opts, token, finish, r.url);
+      return token;
+    }
+
+    // 未命中 mp3：非微信回退原生 TTS 保底出声；微信静默推进（与旧行为一致）
+    if (!this.isWeChat && this.speechAvailable && text) {
+      var keys = [];
+      this.ttsFiles.forEach(function (v, k) { keys.push('"' + k.slice(0, 25) + '..."'); });
+      _dbg('MISS | 回退原生TTS | 已有keys: ' + JSON.stringify(keys));
+      try {
+        const utter = new SpeechSynthesisUtterance(text);
+        utter.lang = this.voice ? this.voice.lang : 'zh-CN';
+        if (this.voice) utter.voice = this.voice;
+        utter.rate = Math.min(2, Math.max(0.5, Number(opts.rate) || 1));
+        utter.volume = Math.min(1, Math.max(0, Number(opts.volume) || 1));
+        utter.pitch = 1;
+        this.duckDown();
+        utter.onend = () => { if (token === this.lastSpeechToken) { this.duckUp(); finish(); } };
+        utter.onerror = () => { if (token === this.lastSpeechToken) { this.duckUp(); finish(); } };
+        window.speechSynthesis.speak(utter);
+      } catch (err) {
+        console.warn('[audio] 原生TTS朗读失败', err);
+        this.duckUp();
+        setTimeout(finish, 300);
+        return token;
       }
+      setTimeout(() => {
+        if (token === this.lastSpeechToken) { this.duckUp(); finish(); }
+      }, this._estimateDurationMs(text));
       return token;
     }
 
-    if (!this.speechAvailable || !text) {
-      _dbg('skip | speechAvail=' + this.speechAvailable + ' text=' + !!text + ' (非微信原生TTS路径)');
-      setTimeout(finish, this._estimateDurationMs(text || ''));
-      return token;
-    }
-
-    try {
-      const utter = new SpeechSynthesisUtterance(text);
-      utter.lang = this.voice ? this.voice.lang : 'zh-CN';
-      if (this.voice) utter.voice = this.voice;
-      utter.rate = Math.min(2, Math.max(0.5, Number(opts.rate) || 1));
-      utter.volume = Math.min(1, Math.max(0, Number(opts.volume) || 1));
-      utter.pitch = 1;
-      this.duckDown();
-      utter.onend = () => { if (token === this.lastSpeechToken) { this.duckUp(); finish(); } };
-      utter.onerror = () => { if (token === this.lastSpeechToken) { this.duckUp(); finish(); } };
-      window.speechSynthesis.speak(utter);
-    } catch (err) {
-      console.warn('[audio] 朗读失败', err);
-      this.duckUp();
-      setTimeout(finish, 300);
-      return token;
-    }
-
-    setTimeout(() => {
-      if (token === this.lastSpeechToken) { this.duckUp(); finish(); }
-    }, this._estimateDurationMs(text));
+    setTimeout(finish, this._estimateDurationMs(text || ''));
     return token;
   }
 
-  /** 快速朗读单个数字/短词（用于计数与倒数）。先取消待播语音，防止队列堆积。 */
+  /** 快速朗读单个数字/短词（用于计数与倒数）。先取消待播语音，防止队列堆积。
+   *  统一优先播预生成 mp3，未命中时非微信回退原生 TTS。 */
   speakCount(word, options = {}) {
     const opts = { rate: 1.1, volume: 1.0, ...options };
     const text = String(word);
+    this.lastSpeechToken++;
 
-    // 微信分支：命中预生成语音则播文件，未命中静默
-    if (this.isWeChat) {
-      this.lastSpeechToken++;
-      const r = this._resolveTtsUrl(text);
-      if (r.url) {
-        this._speakFromFile(text, opts, this.lastSpeechToken, () => {}, r.url);
-      }
+    // 主路径：所有环境统一播预生成 mp3
+    const r = this._resolveTtsUrl(text);
+    if (r.url) {
+      this._speakFromFile(text, opts, this.lastSpeechToken, () => {}, r.url);
       return;
     }
 
+    // 未命中 mp3：非微信回退原生 TTS；微信静默
+    if (this.isWeChat) return;
     if (!this.speechAvailable) return;
     try {
       window.speechSynthesis.cancel();

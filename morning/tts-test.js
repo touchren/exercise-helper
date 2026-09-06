@@ -16,7 +16,7 @@
   'use strict';
 
   var TEXT = '测试语音。一二三。';
-  var DIAG_VERSION = 'v60';
+  var DIAG_VERSION = 'v71';
   var logLines = [];
   var ctx = null;
 
@@ -114,6 +114,13 @@
     lines.push('AudioManager: ' + (typeof AudioManager));
     lines.push('speechSynthesis: ' + ('speechSynthesis' in window ? '有' : '无'));
     lines.push('AudioContext: ' + (window.AudioContext || window.webkitAudioContext ? '有' : '无'));
+    lines.push('—— 缩放诊断 ——');
+    lines.push('innerWidth: ' + window.innerWidth);
+    lines.push('clientWidth: ' + document.documentElement.clientWidth);
+    lines.push('visualViewport.scale: ' + (window.visualViewport ? window.visualViewport.scale : '无API'));
+    lines.push('devicePixelRatio: ' + window.devicePixelRatio);
+    lines.push('screen: ' + screen.width + 'x' + screen.height);
+    lines.push('scrollWidth: ' + Math.max(document.body.scrollWidth, document.documentElement.scrollWidth));
     lines.push('UA: ' + ua);
     return lines.join('\n');
   }
@@ -219,18 +226,34 @@
     refreshBtn.addEventListener('click', function () {
       refreshBtn.textContent = '🧹 清理中…';
       refreshBtn.disabled = true;
-      Promise.all([
-        navigator.serviceWorker.getRegistrations().then(function (regs) {
-          return Promise.all(regs.map(function (r) { return r.unregister(); }));
-        }),
-        window.caches ? caches.keys().then(function (keys) {
-          return Promise.all(keys.map(function (k) { return caches.delete(k); }));
-        }) : Promise.resolve()
-      ]).then(function () {
-        location.reload();
-      }).catch(function () {
-        location.reload();
-      });
+
+      function hardReload() {
+        // 加时间戳参数强刷，绕过一切缓存；微信 WebView 里 location.reload 可能仍走旧缓存
+        try { location.replace(location.pathname + '?t=' + Date.now()); }
+        catch (e) { location.reload(); }
+      }
+
+      function cleanup() {
+        var swCleanup = (navigator.serviceWorker && navigator.serviceWorker.getRegistrations)
+          ? navigator.serviceWorker.getRegistrations().then(function (regs) {
+              return Promise.all(regs.map(function (r) { return r.unregister(); }));
+            })
+          : Promise.resolve();
+
+        var cacheCleanup = window.caches
+          ? caches.keys().then(function (keys) {
+              return Promise.all(keys.map(function (k) { return caches.delete(k); }));
+            })
+          : Promise.resolve();
+
+        return Promise.all([swCleanup, cacheCleanup]);
+      }
+
+      // 超时兜底：微信 WebView 里 SW/Cache API 的 Promise 可能永不 settle，
+      // 卡住会让「清理中」一直显示、页面不刷新。3 秒后无论结果都强制刷新。
+      var timeout = new Promise(function (resolve) { setTimeout(resolve, 3000); });
+
+      Promise.race([cleanup(), timeout]).then(hardReload).catch(hardReload);
     });
     contentWrap.appendChild(refreshBtn);
 

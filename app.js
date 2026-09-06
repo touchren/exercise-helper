@@ -6,7 +6,7 @@
 (() => {
   'use strict';
 
-  const APP_VERSION = 'workout-selector-v64-260905134541';
+  const APP_VERSION = 'workout-selector-v80-260906161351';
 
   // ---------- DOM 引用 ----------
   const $ = (id) => document.getElementById(id);
@@ -20,6 +20,8 @@
     btnSettings: $('btn-settings'),
     btnBack: $('btn-back'),
     btnReset: $('btn-reset'),
+    btnFaqMore: $('btn-faq-more'),
+    faqMore: $('faq-more'),
     modalConfirm: $('modal-confirm'),
     modalText: $('modal-text'),
     btnConfirmYes: $('btn-confirm-yes'),
@@ -235,6 +237,20 @@
     saveConfig();
     renderMain();
   });
+
+  // ---------- FAQ 展开更多 ----------
+  if (el.btnFaqMore && el.faqMore) {
+    el.btnFaqMore.addEventListener('click', () => {
+      const expanded = !el.faqMore.classList.contains('hidden');
+      if (expanded) {
+        el.faqMore.classList.add('hidden');
+        el.btnFaqMore.textContent = '展开更多问题 ↓';
+      } else {
+        el.faqMore.classList.remove('hidden');
+        el.btnFaqMore.textContent = '收起问题 ↑';
+      }
+    });
+  }
 
   el.btnReset.addEventListener('click', () => {
     showConfirm('确定要恢复默认设置吗？所有时间设置将重置。', () => {

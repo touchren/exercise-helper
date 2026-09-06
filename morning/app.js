@@ -71,10 +71,33 @@
     if (name === 'settings') SettingsUI.render();
   }
 
-  el.btnSettings.addEventListener('click', () => showScreen('settings'));
-  el.btnRecords.addEventListener('click', () => showScreen('records'));
-  el.btnBackSettings.addEventListener('click', () => showScreen('main'));
-  el.btnBackRecords.addEventListener('click', () => showScreen('main'));
+  el.btnSettings.addEventListener('click', () => {
+    showScreen('settings');
+    window.history.pushState({ screen: 'settings' }, '');
+  });
+  el.btnRecords.addEventListener('click', () => {
+    showScreen('records');
+    window.history.pushState({ screen: 'records' }, '');
+  });
+  // UI 返回按钮走 history.back()，与 Android 返回手势走同一路径
+  el.btnBackSettings.addEventListener('click', () => window.history.back());
+  el.btnBackRecords.addEventListener('click', () => window.history.back());
+
+  // Android 返回手势拦截：子页面时返回关闭子页面，主屏返回退出到选择页
+  if (window.history && window.history.pushState) {
+    // 页面加载时 push 哨兵条目，主屏按返回时由此触发 goBackToSelector
+    window.history.pushState({ screen: 'main' }, '');
+    window.addEventListener('popstate', () => {
+      const openName = Object.keys(el.screens).find((k) => k !== 'main' && el.screens[k].classList.contains('active'));
+      if (openName) {
+        // 子页面返回：切回主屏（pop 已消费子页面条目，无需再 push）
+        showScreen('main');
+      } else {
+        // 主屏返回：退出到选择页
+        goBackToSelector();
+      }
+    });
+  }
 
   // 返回运动选择页（父目录）
   function goBackToSelector() {
@@ -84,6 +107,10 @@
       window.location.href = '../';
     };
     if (workoutState === 'running' || workoutState === 'paused') {
+      // 用户可能取消，重新 push 哨兵恢复返回拦截能力
+      if (window.history && window.history.pushState) {
+        window.history.pushState({ screen: 'main' }, '');
+      }
       showConfirm('训练进行中，确定返回？返回后本次训练将结束。', () => {
         const stats = engine ? engine.stop() : null;
         if (stats) saveRecord(stats);
@@ -545,7 +572,11 @@
   // ---------- Service Worker ----------
   if ('serviceWorker' in navigator) {
     window.addEventListener('load', () => {
-      navigator.serviceWorker.register('./sw.js').catch((err) => {
+      navigator.serviceWorker.register('./sw.js').then(() => {
+        navigator.serviceWorker.addEventListener('controllerchange', () => {
+          location.reload();
+        });
+      }).catch((err) => {
         console.warn('[app] Service Worker 注册失败', err);
       });
     });

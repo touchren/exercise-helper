@@ -2,19 +2,104 @@
 <html lang="zh-CN">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, minimum-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+  <meta name="format-detection" content="telephone=no">
+  <meta name="x5-orientation" content="portrait">
+  <meta name="screen-orientation" content="portrait">
+  <meta name="x5-page-mode" content="app">
+  <meta name="browsermode" content="application">
+  <style>
+    /* 禁止微信/系统浏览器自动调整字体大小 */
+    html, body {
+      -webkit-text-size-adjust: 100% !important;
+      text-size-adjust: 100% !important;
+      -moz-text-size-adjust: 100% !important;
+    }
+  </style>
+  <script>
+    // 安卓微信强制设置标准字号（fontSize:'2'=100% 标准档；传 0 会被微信当作最小档约 80%，反而缩小字体）
+    (function() {
+      if (typeof WeixinJSBridge === 'object' && typeof WeixinJSBridge.invoke === 'function') {
+        handleFontSize();
+      } else {
+        document.addEventListener('WeixinJSBridgeReady', handleFontSize, false);
+      }
+      function handleFontSize() {
+        try {
+          WeixinJSBridge.invoke('setFontSizeCallback', { fontSize: '2' });
+          WeixinJSBridge.on('menu:setfont', function() {
+            WeixinJSBridge.invoke('setFontSizeCallback', { fontSize: '2' });
+          });
+        } catch (e) {}
+      }
+    })();
+  </script>
+  <script>
+    // 微信 X5 内核会劫持 meta viewport 删参数导致整页缩放，运行时强制重写回标准 viewport
+    (function() {
+      if (!/micromessenger/i.test(navigator.userAgent)) return;
+      var CONTENT = 'width=device-width, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0, user-scalable=no, viewport-fit=cover';
+      function forceViewport() {
+        var meta = document.querySelector('meta[name="viewport"]');
+        if (!meta) {
+          meta = document.createElement('meta');
+          meta.setAttribute('name', 'viewport');
+          document.head.appendChild(meta);
+        }
+        meta.setAttribute('content', CONTENT);
+      }
+      function schedule() {
+        forceViewport();
+        setTimeout(forceViewport, 100);
+        setTimeout(forceViewport, 500);
+        setTimeout(forceViewport, 1000);
+      }
+      if (document.readyState === 'complete') schedule();
+      else document.addEventListener('DOMContentLoaded', schedule);
+      window.addEventListener('load', schedule);
+    })();
+  </script>
+  <script>
+    // 微信 WebView 的 devicePixelRatio 是启动时缓存值（常偏低），不跟随系统「显示大小」，
+    // 导致同样的 CSS px 字体/图标比 Chrome 物理小约 18%。这里对低 DPR 的微信做等比补偿。
+    (function() {
+      try {
+        var ua = navigator.userAgent || '';
+        var isWechat = /micromessenger/i.test(ua);
+        var isAndroid = /android/i.test(ua);
+        var dpr = window.devicePixelRatio || 1;
+        // 仅 Android 微信 X5 内核存在 DPR 启动缓存偏低问题（iOS 微信 DPR 为硬件真实值，无需补偿）
+        if (isWechat && isAndroid && dpr > 0 && dpr < 2.6) {
+          var zoom = 2.75 / dpr;
+          if (zoom > 1.01) {
+            document.documentElement.style.zoom = zoom.toFixed(3);
+          }
+        }
+      } catch (e) { /* 静默 */ }
+    })();
+  </script>
   <meta name="theme-color" content="#1a1a2e">
-  <meta name="description" content="饭后半小时后20分钟锻炼：纯语音引导的晚练助手">
+  <meta name="description" content="晚练语音引导：8 个动作 20 分钟，抗阻 8 分钟，含单杠离心下放、自重深蹲、鸟狗式，饭后半小时锻炼与拉伸结合，全程语音播报。">
+  <meta name="keywords" content="晚练,睡前拉伸,语音引导健身,居家训练,久坐放松">
   <meta name="mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
   <meta name="apple-mobile-web-app-title" content="晚练">
-  <title>晚练</title>
+  <title>晚练 20 分钟语音引导计划：深蹲·鸟狗式·拉伸｜闻鼓而动</title>
   <link rel="manifest" href="manifest.json">
   <link rel="icon" type="image/svg+xml" href="icon.svg">
-  <link rel="apple-touch-icon" href="icon.svg">
-  <link rel="stylesheet" href="styles.css">
-  <link rel="stylesheet" href="styles-secondary.css">
+  <link rel="apple-touch-icon" href="../apple-touch-icon.png">
+  <link rel="stylesheet" href="styles.css?v=80">
+  <link rel="stylesheet" href="styles-secondary.css?v=80">
+  <link rel="canonical" href="https://exercise.touchren.pub/evening/">
+  <meta property="og:type" content="website">
+  <meta property="og:site_name" content="闻鼓而动">
+  <meta property="og:title" content="晚练 20 分钟语音引导计划｜闻鼓而动">
+  <meta property="og:description" content="8 个动作 20 分钟，抗阻 8 分钟，全程语音播报：单杠离心下放、自重深蹲、鸟狗式、门框胸肩拉伸。">
+  <meta property="og:url" content="https://exercise.touchren.pub/evening/">
+  <meta property="og:image" content="https://exercise.touchren.pub/og-image.png">
+  <meta property="og:locale" content="zh_CN">
+  <meta name="twitter:card" content="summary_large_image">
 </head>
 <body>
   <div id="app">
@@ -112,9 +197,26 @@
         <span class="topbar-spacer"></span>
       </header>
 
-      <div class="version-badge">版本：evening-v33</div>
+      <div class="version-badge">版本：evening-v80</div>
 
       <main class="scroll-area">
+        <div class="card">
+          <h2>动作清单（8 个动作 · 约 20 分钟）</h2>
+          <table class="plan-table">
+            <thead><tr><th>序号</th><th>动作</th><th>类型</th><th>规格</th><th>休息</th></tr></thead>
+            <tbody>
+              <tr><td>1</td><td>猫牛流动</td><td>热身</td><td>8 次循环</td><td>—</td></tr>
+              <tr><td>2</td><td>靠墙天使</td><td>激活</td><td>15 次 × 1 组</td><td>—</td></tr>
+              <tr><td>3</td><td>单杠离心下放</td><td>抗阻</td><td>3 次 × 3 组</td><td>组间 45 秒</td></tr>
+              <tr><td>4</td><td>门框胸肩拉伸</td><td>拉伸</td><td>20 秒 → 休息 15 秒 → 40 秒</td><td>—</td></tr>
+              <tr><td>5</td><td>自重深蹲</td><td>抗阻</td><td>12 次 × 3 组</td><td>组间 45 秒</td></tr>
+              <tr><td>6</td><td>站立股四头肌拉伸</td><td>拉伸</td><td>30 秒/侧</td><td>—</td></tr>
+              <tr><td>7</td><td>鸟狗式</td><td>抗阻</td><td>10 次/侧 × 3 组</td><td>组间 30 秒</td></tr>
+              <tr><td>8</td><td>婴儿式</td><td>拉伸</td><td>40 秒</td><td>训练结束</td></tr>
+            </tbody>
+          </table>
+        </div>
+
         <div class="card">
           <h2>语音设置</h2>
           <label class="field-row slider-row">
@@ -202,12 +304,15 @@
     </div>
   </div>
 
-  <script src="workout-data.js"></script>
-  <script src="storage.js"></script>
-  <script src="audio.js"></script>
-  <script src="engine.js"></script>
-  <script src="settings.js"></script>
-  <script src="records.js"></script>
-  <script src="app.js"></script>
+<script src="workout-data.js?v=80"></script>
+<script src="storage.js?v=80"></script>
+<script src="audio.js?v=80"></script>
+<script src="engine.js?v=80"></script>
+<script src="settings.js?v=80"></script>
+<script src="records.js?v=80"></script>
+<script src="app.js?v=80"></script>
+  <script type="application/ld+json">
+  {"@context":"https://schema.org","@type":"ExercisePlan","name":"晚练 20 分钟语音引导计划","url":"https://exercise.touchren.pub/evening/","description":"8 个动作 20 分钟，抗阻 8 分钟：猫牛流动、靠墙天使、单杠离心下放、门框胸肩拉伸、自重深蹲、站立股四头肌拉伸、鸟狗式、婴儿式。全程语音播报。","activityDuration":"PT20M","exerciseType":"晚间训练","isBasedOn":"https://www.thelancet.com/journals/lancet/article/PIIS0140-6736(18)32650-3/abstract"}
+  </script>
 </body>
 </html>

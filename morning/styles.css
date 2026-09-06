@@ -413,8 +413,8 @@ body {
 }
 
 /* ---------- 小屏手机（矮视口）--------- */
-/* 训练区内容较多时允许内部滚动，控制按钮始终固定在底部 */
-@media (max-height: 740px) {
+/* 仅收缩边距，保持字体/图标尺寸不变，内容放不下则训练区滚动，保证微信WebView与系统浏览器体验一致 */
+@media (max-height: 680px) {
   .screen {
     padding: 10px 16px calc(12px + var(--safe-bottom));
   }
@@ -424,45 +424,17 @@ body {
   }
 
   .ring-wrap {
-    width: min(70vw, 220px, 30vh);
-    margin-bottom: 10px;
-  }
-
-  .phase-name {
-    font-size: 20px;
-    margin-bottom: 6px;
-  }
-
-  .phase-sub {
-    font-size: 13px;
-  }
-
-  .elapsed {
-    font-size: 22px;
-  }
-
-  .phase-status {
-    font-size: 15px;
-  }
-
-  .tips {
-    margin-top: 8px;
-    padding: 10px 14px;
-    font-size: 12px;
+    width: min(78vw, 260px, 38vh);
+    margin-bottom: 8px;
   }
 
   .topbar {
     padding: 4px 2px 8px;
   }
 
-  .btn {
-    min-height: 52px;
-    font-size: 16px;
-  }
-
-  .btn-start {
-    min-height: 58px;
-    font-size: 18px;
+  .tips {
+    margin-top: 6px;
+    padding: 8px 14px;
   }
 
   .controls {
@@ -477,4 +449,23 @@ body {
     animation-iteration-count: 1 !important;
     transition-duration: 0.01ms !important;
   }
+}
+
+/* ---------- 动作清单表格 ---------- */
+.plan-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.82rem;
+}
+
+.plan-table th,
+.plan-table td {
+  text-align: left;
+  padding: 7px 8px;
+  border-bottom: 1px solid var(--border);
+}
+
+.plan-table th {
+  color: var(--text-dim);
+  font-weight: 500;
 }
