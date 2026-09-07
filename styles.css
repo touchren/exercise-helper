@@ -559,8 +559,11 @@ input:focus-visible {
 
 /* ---------- SEO 静态内容区 ---------- */
 .seo-faq {
-  padding: 14px 20px;
-  border-top: 1px solid var(--border);
+  margin-top: 24px;
+  padding: 16px 18px;
+  background: linear-gradient(135deg, rgba(255, 120, 71, 0.06) 0%, rgba(62, 207, 142, 0.04) 100%);
+  border: 1px solid var(--border);
+  border-radius: 14px;
 }
 
 .seo-faq h2 {
