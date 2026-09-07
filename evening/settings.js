@@ -13,7 +13,6 @@ const SettingsUI = (() => {
     settingBeep: $('setting-beep'),
     settingAmbientEnabled: $('setting-ambient-enabled'),
     settingAmbientDucking: $('setting-ambient-ducking'),
-    settingAmbientType: $('setting-ambient-type'),
     settingAmbientVolume: $('setting-ambient-volume'),
     rateValue: $('rate-value'),
     volumeValue: $('volume-value'),
@@ -47,7 +46,6 @@ const SettingsUI = (() => {
     const ambient = appSettings.ambient || { enabled: true, type: 'dawn', volume: 0.3 };
     el.settingAmbientEnabled.checked = !!ambient.enabled;
     el.settingAmbientDucking.checked = ambient.ducking === true;
-    el.settingAmbientType.value = ambient.type || 'beat';
     el.settingAmbientVolume.value = String(ambient.volume);
     el.ambientVolumeValue.textContent = el.settingAmbientVolume.value;
     renderExerciseConfigs();
@@ -133,13 +131,6 @@ const SettingsUI = (() => {
       appSettings = {
         ...appSettings,
         ambient: { ...(appSettings.ambient || {}), ducking: el.settingAmbientDucking.checked }
-      };
-      Storage.saveSettings(appSettings);
-    });
-    el.settingAmbientType.addEventListener('change', () => {
-      appSettings = {
-        ...appSettings,
-        ambient: { ...(appSettings.ambient || {}), type: el.settingAmbientType.value }
       };
       Storage.saveSettings(appSettings);
     });
