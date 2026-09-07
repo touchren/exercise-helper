@@ -20,3 +20,6 @@ filing.js
 # 系统文件
 .DS_Store
 Thumbs.db
+
+# 微信小程序源码（独立仓库，不上传 GitHub）
+miniprogram/
