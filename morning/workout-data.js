@@ -43,7 +43,7 @@ const DEFAULT_EXERCISES = [
     name: '臀桥',
     type: 'resistance',
     sets: 3,
-    reps: 12,
+    reps: 15,
     repSec: 4,          // 上 2 秒、顶峰 1 秒、下 1 秒
     restSec: 30,
     sides: null,
