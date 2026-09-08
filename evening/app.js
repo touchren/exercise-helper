@@ -38,8 +38,10 @@
     btnWarningDismiss: $('btn-warning-dismiss'),
     modalConfirm: $('modal-confirm'),
     modalText: $('modal-text'),
+    modalActions: $('modal-actions'),
     btnConfirmYes: $('btn-confirm-yes'),
-    btnConfirmNo: $('btn-confirm-no')
+    btnConfirmNo: $('btn-confirm-no'),
+    btnConfirmPauseLeave: $('btn-confirm-pause-leave')
   };
 
   // ---------- 全局状态 ----------
@@ -111,27 +113,57 @@
       if (window.history && window.history.pushState) {
         window.history.pushState({ screen: 'main' }, '');
       }
-      showConfirm('训练进行中，确定返回？返回后本次训练将结束。', () => {
-        const stats = engine ? engine.stop() : null;
-        if (stats) saveRecord(stats);
-        navigate();
-      });
-    } else {
-      navigate();
+      showBackConfirm(
+        () => {
+          // 暂停并离开：暂停引擎后离开（不保存记录）
+          if (engine && workoutState === 'running') {
+            engine.pause();
+          }
+          stopElapsedTimer();
+          audio.stopAmbient();
+          releaseWakeLock();
+          navigate();
+        },
+        () => {
+          // 直接离开：停止引擎并保存记录
+          const stats = engine ? engine.stop() : null;
+          if (stats) saveRecord(stats);
+          resetWorkoutUi();
+          navigate();
+        }
+      );
+      return;
     }
+    navigate();
   }
   el.btnBackHome.addEventListener('click', goBackToSelector);
 
   // ---------- 确认弹窗（替代 alert/confirm） ----------
   let confirmHandler = null;
+  let confirmPauseLeaveHandler = null;
   function showConfirm(text, onYes) {
     confirmHandler = onYes;
+    confirmPauseLeaveHandler = null;
     el.modalText.textContent = text;
+    el.btnConfirmYes.textContent = '确认';
+    el.btnConfirmPauseLeave.classList.add('hidden');
+    el.modalActions.classList.remove('modal-actions--back');
+    el.modalConfirm.classList.remove('hidden');
+  }
+  // 三按钮返回确认：暂停并离开 / 直接离开 / 取消
+  function showBackConfirm(onPauseLeave, onDirectLeave) {
+    confirmHandler = onDirectLeave;
+    confirmPauseLeaveHandler = onPauseLeave;
+    el.modalText.textContent = '训练进行中，确定离开？';
+    el.btnConfirmYes.textContent = '直接离开';
+    el.btnConfirmPauseLeave.classList.remove('hidden');
+    el.modalActions.classList.add('modal-actions--back');
     el.modalConfirm.classList.remove('hidden');
   }
   function hideConfirm() {
     el.modalConfirm.classList.add('hidden');
     confirmHandler = null;
+    confirmPauseLeaveHandler = null;
   }
   el.btnConfirmYes.addEventListener('click', () => {
     const handler = confirmHandler;
@@ -139,6 +171,11 @@
     if (typeof handler === 'function') handler();
   });
   el.btnConfirmNo.addEventListener('click', hideConfirm);
+  el.btnConfirmPauseLeave.addEventListener('click', () => {
+    const handler = confirmPauseLeaveHandler;
+    hideConfirm();
+    if (typeof handler === 'function') handler();
+  });
 
   // ---------- 模式切换 ----------
   function initModeSwitch() {
@@ -164,31 +201,56 @@
     el.modeBadge.classList.toggle('manual', !isRecommended);
   }
 
+  function setPhaseName(text) {
+    el.phaseName.textContent = text;
+    el.phaseName.classList.remove('fade-in');
+    void el.phaseName.offsetWidth;
+    el.phaseName.classList.add('fade-in');
+  }
+
   function renderIdleSub() {
+    const settings = { ...SettingsUI.currentSettings(), mode: currentMode };
+    const steps = buildStepSequence(settings.exercises, settings);
     if (currentMode === 'stretch') {
-      const settings = { ...SettingsUI.currentSettings(), mode: 'stretch' };
-      const steps = buildStepSequence(settings.exercises, settings);
       const totalSec = steps.reduce((sum, s) => sum + (Number(s.duration) || 0), 0);
       const min = Math.max(1, Math.round(totalSec / 60));
       el.phaseSub.textContent = `放松 · 约${min}分钟`;
     } else {
-      el.phaseSub.textContent = '全程20分钟 · 抗阻8分钟';
+      let resistanceSec = 0;
+      for (const s of steps) {
+        if (s.countsTowardResistance && s.duration) {
+          resistanceSec += s.duration;
+        }
+      }
+      const totalMin = Math.round((WORKOUT_META.totalSec || 0) / 60);
+      const resistanceMin = Math.round(resistanceSec / 60);
+      el.phaseSub.textContent = `全程${totalMin}分钟 · 抗阻${resistanceMin}分钟`;
     }
   }
 
-  el.btnModeFull.addEventListener('click', () => {
-    if (workoutState === 'running' || workoutState === 'paused') return;
-    currentMode = 'full';
+  function handleModeTap(newMode) {
+    if (workoutState === 'running') return;
+    if (newMode === currentMode) return;
+    // 暂停态切换：停止引擎并回 idle
+    if (workoutState === 'paused') {
+      if (engine) {
+        engine.stop();
+        engine = null;
+      }
+      stopElapsedTimer();
+      audio.stopAmbient();
+      releaseWakeLock();
+      workoutState = 'idle';
+    }
+    currentMode = newMode;
     renderModeSwitch();
-    renderIdleSub();
-  });
+    renderIdleUi();
+    setControlsState();
+  }
 
-  el.btnModeStretch.addEventListener('click', () => {
-    if (workoutState === 'running' || workoutState === 'paused') return;
-    currentMode = 'stretch';
-    renderModeSwitch();
-    renderIdleSub();
-  });
+  el.btnModeFull.addEventListener('click', () => handleModeTap('full'));
+
+  el.btnModeStretch.addEventListener('click', () => handleModeTap('stretch'));
 
   // ---------- 训练控制 ----------
   el.btnStart.addEventListener('click', () => {
@@ -241,6 +303,7 @@
   });
 
   function startWorkout() {
+    el.ringWrap.classList.remove('pulse');
     const availability = audio.init();
     if (!availability.speechAvailable || !availability.beepAvailable) {
       showWarning(availability);
@@ -283,7 +346,7 @@
   }
 
   function renderIdleUi() {
-    el.phaseName.textContent = '晚练准备就绪';
+    setPhaseName('晚练准备就绪');
     renderIdleSub();
     el.phaseStatus.textContent = '准备开始';
     el.phaseStatus.classList.remove('paused-text');
@@ -292,6 +355,7 @@
     setRingProgress(null);
     el.elapsedTime.textContent = '00:00';
     el.ringWrap.classList.remove('breathing');
+    el.ringWrap.classList.remove('pulse');
   }
 
   function setControlsState() {
@@ -301,6 +365,16 @@
     el.btnStop.disabled = !active;
     el.btnSkip.disabled = !active;
     el.btnPause.textContent = workoutState === 'paused' ? '继续' : '暂停';
+    updateModeSwitchVisibility();
+  }
+
+  function updateModeSwitchVisibility() {
+    if (!Storage.isAlternateDaysEnabled()) {
+      el.modeSwitch.classList.add('hidden');
+      return;
+    }
+    const show = workoutState === 'idle' || workoutState === 'done' || workoutState === 'paused';
+    el.modeSwitch.classList.toggle('hidden', !show);
   }
 
   // ---------- 引擎回调 ----------
@@ -320,12 +394,12 @@
   function renderPhase(phase) {
     if (!phase) return;
     if (phase.phaseType === 'complete') {
-      el.phaseName.textContent = '训练结束';
+      setPhaseName('训练结束');
       el.phaseSub.textContent = '本次训练完成，辛苦了';
       el.phaseStatus.textContent = '已完成';
     } else {
       const setPart = phase.setNumber ? ` · 第${phase.setNumber}组/${phase.totalSets}组` : '';
-      el.phaseName.textContent = `${phase.exerciseName || ''}${setPart}`;
+      setPhaseName(`${phase.exerciseName || ''}${setPart}`);
       el.phaseSub.textContent = PHASE_TYPE_LABEL[phase.phaseType] || ' ';
     }
 
@@ -342,7 +416,7 @@
       el.phaseStatus.textContent = `${phase.sideName ? phase.sideName + ' · ' : ''}第${phase.repCount}次/${phase.repTarget}`;
       setRingProgress(phase.totalSec ? 0 : null);
     } else if (phase.stepType === 'hold') {
-      el.ringWrap.classList.remove('breathing');
+      el.ringWrap.classList.add('breathing');
       el.phaseStatus.textContent = `保持中 · 剩余${phase.remainingSec}秒`;
       setRingProgress(phase.totalSec ? 0 : null);
     } else if (phase.stepType === 'rest') {
@@ -388,7 +462,7 @@
     audio.stopAmbient();
     releaseWakeLock();
     saveRecord(stats);
-    el.phaseName.textContent = '训练结束';
+    setPhaseName('训练结束');
     if (sessionMode === 'stretch') {
       el.phaseSub.textContent = `用时 ${formatDuration(stats.totalTimeSec)} · 放松训练`;
     } else {
@@ -397,6 +471,9 @@
     el.phaseStatus.textContent = '辛苦了';
     el.ringWrap.classList.remove('breathing');
     setRingProgress(1);
+    el.ringWrap.classList.remove('pulse');
+    void el.ringWrap.offsetWidth;
+    el.ringWrap.classList.add('pulse');
     setControlsState();
   }
 

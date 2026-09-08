@@ -346,6 +346,53 @@
   gap: 12px;
 }
 
+/* 三按钮返回弹窗布局：暂停并离开独占一行，取消/直接离开次级行 */
+.modal-actions.modal-actions--back {
+  grid-template-columns: 1fr;
+  gap: 12px;
+}
+
+.modal-actions--back .btn-confirm-pause-leave {
+  width: 100%;
+}
+
+.modal-actions--back .modal-actions-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+}
+
 .modal-actions .btn {
   min-height: 52px;
+}
+
+/* phaseName 淡入动画 */
+.phase-name.fade-in {
+  animation: phase-name-fade-in 200ms ease both;
+}
+
+@keyframes phase-name-fade-in {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+/* 完成态满环 pulse 动画 */
+.ring-wrap.pulse {
+  animation: ring-pulse 0.6s ease both;
+}
+
+@keyframes ring-pulse {
+  0% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(1.08);
+  }
+  100% {
+    transform: scale(1);
+  }
 }
