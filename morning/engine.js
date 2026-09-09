@@ -23,6 +23,7 @@ class WorkoutEngine {
     this.events = [];               // 当前步骤的事件表 { at, run, fired }
     this.timerId = null;            // tick 定时器
     this.pauseTimerId = null;       // transition 停顿定时器
+    this.countdownTimers = null;    // countdown token 预排程定时器列表
     this.speechStepActive = false;  // 语音步骤是否在等待 onEnd
     this.phaseElapsed = 0;          // 当前步骤已过秒数
     this.stepStartTs = 0;           // 当前步骤基准时间戳
@@ -120,6 +121,12 @@ class WorkoutEngine {
       return;
     }
     this.stepStartTs = Date.now();
+    // countdown 的 token 用独立 setTimeout 预排程，各拍触发互不牵连。
+    // 原实现依赖「立即 tick + 首个 setInterval 回调」，announce→countdown
+    // 切换瞬间主线程繁忙会延迟首个回调，拉长「首 token→次 token」听感间隔
+    if (step.type === 'countdown') {
+      this._scheduleCountdown(step);
+    }
     this.timerId = setInterval(() => this._tick(), 1000);
     this._tick();
   }
@@ -162,10 +169,30 @@ class WorkoutEngine {
     this._startStep(this.stepIndex);
   }
 
+  /** 倒计时 token 预排程：每个 token 独立 setTimeout，触发时机互不牵连。
+   *  fromElapsedSec 非空时表示从暂停恢复，跳过已播过的 token（i <= 已过秒数）。 */
+  _scheduleCountdown(step, fromElapsedSec) {
+    this.countdownTimers = [];
+    const baseMs = (fromElapsedSec == null ? 0 : fromElapsedSec) * 1000;
+    step.tokens.forEach((token, i) => {
+      if (fromElapsedSec != null && i <= fromElapsedSec) return;
+      const delay = Math.max(0, i * 1000 - baseMs);
+      const timer = setTimeout(() => {
+        if (this.state !== 'running' || this.currentStep !== step) return;
+        this.audio.speakCount(token);
+      }, delay);
+      this.countdownTimers.push(timer);
+    });
+  }
+
   _resumeTimedStep() {
     this.stepStartTs = Date.now() - this.phaseElapsed * 1000;
-    for (const ev of this.events) {
-      if (!ev.fired && ev.at <= this.phaseElapsed) ev.fired = true;
+    if (this.currentStep && this.currentStep.type === 'countdown') {
+      this._scheduleCountdown(this.currentStep, this.phaseElapsed);
+    } else {
+      for (const ev of this.events) {
+        if (!ev.fired && ev.at <= this.phaseElapsed) ev.fired = true;
+      }
     }
     this.timerId = setInterval(() => this._tick(), 1000);
   }
@@ -228,10 +255,10 @@ class WorkoutEngine {
       events.push({ at: step.duration - 1, run: () => this.audio.beep({ frequency: 1320, duration: 0.3, volume: 0.7 }) });
     };
 
+    // countdown 的 token 不走事件表 + setInterval 首回调触发，改由
+    // _scheduleCountdown 独立 setTimeout 预排程，这里返回空事件表，
+    // tick 只负责 onTick 回调与步骤结束判断
     if (step.type === 'countdown') {
-      step.tokens.forEach((token, i) => {
-        events.push({ at: i, run: () => this.audio.speakCount(token) });
-      });
       return events;
     }
 
@@ -318,6 +345,10 @@ class WorkoutEngine {
     if (this.pauseTimerId != null) {
       clearTimeout(this.pauseTimerId);
       this.pauseTimerId = null;
+    }
+    if (this.countdownTimers) {
+      this.countdownTimers.forEach((t) => clearTimeout(t));
+      this.countdownTimers = null;
     }
   }
 
