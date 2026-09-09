@@ -24,6 +24,7 @@ class WorkoutEngine {
     this.timerId = null;            // tick 定时器
     this.pauseTimerId = null;       // transition 停顿定时器
     this.countdownTimers = null;    // countdown token 预排程定时器列表
+    this.beepTimers = null;         // 结束前蜂鸣序列预排程定时器列表
     this.speechStepActive = false;  // 语音步骤是否在等待 onEnd
     this.phaseElapsed = 0;          // 当前步骤已过秒数
     this.stepStartTs = 0;           // 当前步骤基准时间戳
@@ -105,6 +106,11 @@ class WorkoutEngine {
     return step.type === 'announce' || step.type === 'transition' || step.type === 'complete';
   }
 
+  /** 是否带「结束前蜂鸣序列」的定时步骤（beep 走 setTimeout 预排程）。 */
+  _hasBeepSequence(step) {
+    return step.type === 'count_reps' || step.type === 'hold' || step.type === 'rest';
+  }
+
   _startStep(index, preText) {
     const step = this.steps[index];
     if (!step) {
@@ -121,11 +127,14 @@ class WorkoutEngine {
       return;
     }
     this.stepStartTs = Date.now();
-    // countdown 的 token 用独立 setTimeout 预排程，各拍触发互不牵连。
+    // 节奏敏感的播报用独立 setTimeout 预排程，各拍触发互不牵连。
     // 原实现依赖「立即 tick + 首个 setInterval 回调」，announce→countdown
     // 切换瞬间主线程繁忙会延迟首个回调，拉长「首 token→次 token」听感间隔
     if (step.type === 'countdown') {
       this._scheduleCountdown(step);
+    } else if (this._hasBeepSequence(step)) {
+      // 蜂鸣序列虽在步骤中后段，tick 抖动与 catch-up 同样会破坏节奏
+      this._scheduleBeeps(step);
     }
     this.timerId = setInterval(() => this._tick(), 1000);
     this._tick();
@@ -185,11 +194,41 @@ class WorkoutEngine {
     });
   }
 
+  /** 结束前蜂鸣序列预排程：beepBefore 秒窗口内普通蜂鸣 + 最后一声特殊音效，
+   *  每声独立 setTimeout，摆脱 tick 抖动与 catch-up 压缩。
+   *  fromElapsedSec 非空时表示从暂停恢复，跳过已播过的蜂鸣（at <= 已过秒数）。 */
+  _scheduleBeeps(step, fromElapsedSec) {
+    this.beepTimers = [];
+    const beepBefore = this._clamp(this.settings.beepBeforeEnd, 0, 60, 5);
+    const baseMs = (fromElapsedSec == null ? 0 : fromElapsedSec) * 1000;
+    const entries = [];
+    for (let i = 0; i < beepBefore - 1; i++) {
+      entries.push({ at: step.duration - beepBefore + i, run: () => this.audio.beep({}) });
+    }
+    entries.push({ at: step.duration - 1, run: () => this.audio.beep({ frequency: 1320, duration: 0.3, volume: 0.7 }) });
+    entries.forEach((item) => {
+      if (fromElapsedSec != null && item.at <= fromElapsedSec) return;
+      const delay = Math.max(0, item.at * 1000 - baseMs);
+      const timer = setTimeout(() => {
+        if (this.state !== 'running' || this.currentStep !== step) return;
+        try {
+          item.run();
+        } catch (err) {
+          console.warn('[engine] 事件执行失败', err);
+        }
+      }, delay);
+      this.beepTimers.push(timer);
+    });
+  }
+
   _resumeTimedStep() {
     this.stepStartTs = Date.now() - this.phaseElapsed * 1000;
     if (this.currentStep && this.currentStep.type === 'countdown') {
       this._scheduleCountdown(this.currentStep, this.phaseElapsed);
     } else {
+      if (this.currentStep && this._hasBeepSequence(this.currentStep)) {
+        this._scheduleBeeps(this.currentStep, this.phaseElapsed);
+      }
       for (const ev of this.events) {
         if (!ev.fired && ev.at <= this.phaseElapsed) ev.fired = true;
       }
@@ -247,14 +286,6 @@ class WorkoutEngine {
 
   _buildEvents(step) {
     const events = [];
-    const beepBefore = this._clamp(this.settings.beepBeforeEnd, 0, 60, 5);
-    const addBeep = (at) => {
-      for (let i = 0; i < beepBefore - 1; i++) {
-        events.push({ at: at + i, run: () => this.audio.beep({}) });
-      }
-      events.push({ at: step.duration - 1, run: () => this.audio.beep({ frequency: 1320, duration: 0.3, volume: 0.7 }) });
-    };
-
     // countdown 的 token 不走事件表 + setInterval 首回调触发，改由
     // _scheduleCountdown 独立 setTimeout 预排程，这里返回空事件表，
     // tick 只负责 onTick 回调与步骤结束判断
@@ -275,7 +306,6 @@ class WorkoutEngine {
           }
         });
       }
-      addBeep(step.duration - beepBefore);
       return events;
     }
 
@@ -286,14 +316,12 @@ class WorkoutEngine {
           events.push({ at: t, run: () => this.audio.speakCount(word) });
         }
       }
-      addBeep(step.duration - beepBefore);
       return events;
     }
 
     if (step.type === 'rest') {
       events.push({ at: 0, run: () => this.audio.speak(step.tts, { rate: this.settings.rate, volume: this.settings.volume }) });
       events.push({ at: step.duration - 10, run: () => this.audio.speakCount('剩余10秒') });
-      addBeep(step.duration - beepBefore);
       return events;
     }
 
@@ -349,6 +377,10 @@ class WorkoutEngine {
     if (this.countdownTimers) {
       this.countdownTimers.forEach((t) => clearTimeout(t));
       this.countdownTimers = null;
+    }
+    if (this.beepTimers) {
+      this.beepTimers.forEach((t) => clearTimeout(t));
+      this.beepTimers = null;
     }
   }
 
