@@ -7,7 +7,7 @@ https://developers.weixin.qq.com/miniprogram/dev/devtools/download.html
 
 ### 2. 导入项目
 - 打开开发者工具 → 「导入项目」
-- 项目目录：选择 `exercise-helper/miniprogram/` 目录
+- 项目目录：选择 `/root/repositories/exercise-helper-miniprogram/` 目录（独立项目）
 - AppID：先用测试号（或填写你注册的小程序 AppID）
 - 项目名称：闻鼓而动
 - 后端服务：不使用云服务

@@ -21,5 +21,4 @@ filing.js
 .DS_Store
 Thumbs.db
 
-# 微信小程序源码（独立仓库，不上传 GitHub）
-miniprogram/
+# 微信小程序已独立为 separate 仓库 exercise-helper-miniprogram（gitea），本仓库不再包含
