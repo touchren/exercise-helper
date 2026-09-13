@@ -1,5 +1,9 @@
 <div align="center">
 
+[![License: AGPL v3](https://img.shields.io/badge/License-AGPL%20v3-blue.svg)](https://www.gnu.org/licenses/agpl-3.0)
+[![PWA](https://img.shields.io/badge/PWA-Yes-5C6BC0)](https://exercise.touchren.pub)
+[![Live Demo](https://img.shields.io/badge/Live%20Demo-exercise.touchren.pub-orange)](https://exercise.touchren.pub)
+
 # 闻鼓而动
 
 **学会动作以后，每天坚持只需要按一下开始**
@@ -312,7 +316,13 @@ A: 动作清单参考了柳叶刀腰痛系列研究的建议（稳定训练 + �
 
 ## License
 
-MIT
+[AGPL-3.0](LICENSE)（GNU Affero General Public License v3.0）
+
+- **开源免费**：源码可查看、学习、贡献
+- **商用需授权**：基于本项目的任何修改/衍生作品必须同样以 AGPL-3.0 开源（含提供网络服务的场景）；如需闭源商用或商业授权，请单独联系授权
+- 微信小程序版因涉及用户隐私设计暂不开源，仅开源本 PWA 版本
+
+**技术栈**：纯前端 PWA（Vanilla HTML/CSS/JS），无后端、无构建、数据全本地存储
 
 ---
 
