@@ -1,7 +1,7 @@
 {
   "name": "闻鼓而动",
   "short_name": "闻鼓",
-  "description": "语音引导的居家训练助手：晨钟暮鼓，闻鼓而练",
+  "description": "语音引导的居家训练助手：晨钟暮鼓，闻鼓起练",
   "lang": "zh-CN",
   "start_url": "./",
   "scope": "./",
