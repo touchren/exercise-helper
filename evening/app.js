@@ -481,7 +481,7 @@
     Storage.addRecord({
       date: new Date().toISOString(),
       totalTimeSec: stats.totalTimeSec,
-      resistanceTimeSec: stats.resistanceTimeSec,
+      resistanceTimeSec: sessionMode === 'stretch' ? 0 : stats.resistanceTimeSec, // 放松日不累计抗阻时长
       completed: stats.completed,
       dayType: sessionMode
     });
