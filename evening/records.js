@@ -1,7 +1,6 @@
 /**
  * records.js
- * 训练记录屏幕：本周统计、记录列表、清空操作。
- * 通过全局 RecordsUI 暴露给 app.js 使用，确认弹窗由外部注入。
+ * 训练记录屏幕：本周统计、记录列表。
  */
 const RecordsUI = (() => {
   'use strict';
@@ -9,11 +8,8 @@ const RecordsUI = (() => {
   const $ = (id) => document.getElementById(id);
   const el = {
     weekStats: $('week-stats'),
-    recordsList: $('records-list'),
-    btnClearRecords: $('btn-clear-records')
+    recordsList: $('records-list')
   };
-
-  let confirmFn = null;
 
   function render() {
     renderWeeklyStats();
@@ -85,17 +81,7 @@ const RecordsUI = (() => {
     return `${d.getMonth() + 1}月${d.getDate()}日 ${pad(d.getHours())}:${pad(d.getMinutes())}`;
   }
 
-  function init({ showConfirm }) {
-    confirmFn = showConfirm;
-    el.btnClearRecords.addEventListener('click', () => {
-      if (typeof confirmFn === 'function') {
-        confirmFn('确定要清空所有训练记录吗？此操作不可恢复。', () => {
-          Storage.clearRecords();
-          render();
-        });
-      }
-    });
-  }
+  function init() {}
 
   return { init, render };
 })();

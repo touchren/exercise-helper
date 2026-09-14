@@ -22,7 +22,7 @@ https://developers.weixin.qq.com/miniprogram/dev/devtools/download.html
 3. 点「开始训练」，听语音、看倒计时是否正常
 4. 点暂停 → 继续 → 退出
 5. 测试设置页、记录页导航
-6. 点「清空记录」「重置设置」「清除语音缓存」
+6. 测试「重置设置」「清除语音缓存」
 
 ---
 

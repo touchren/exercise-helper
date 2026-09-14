@@ -209,11 +209,6 @@
   font-size: 14px;
 }
 
-.btn-danger-soft {
-  color: var(--red);
-  border-color: rgba(224, 82, 82, 0.35);
-}
-
 /* ---------- 通用按钮变体 ---------- */
 .btn-secondary {
   background: var(--bg-elev);

@@ -659,7 +659,7 @@
 
   // ---------- 初始化 ----------
   SettingsUI.init();
-  RecordsUI.init({ showConfirm });
+  RecordsUI.init();
   initModeSwitch();
   renderIdleUi();
   setControlsState();
