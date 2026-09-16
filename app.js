@@ -6,7 +6,7 @@
 (() => {
   'use strict';
 
-  const APP_VERSION = 'workout-selector-v87-260914231433';
+  const APP_VERSION = 'workout-selector-v90-260916104349';
 
   // ---------- DOM 引用 ----------
   const $ = (id) => document.getElementById(id);
