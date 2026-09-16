@@ -141,7 +141,10 @@ const KEY_RECORDS = 'morning:records';
         return !Number.isNaN(date.getTime()) && date >= weekStart;
       });
 
-      const resistanceSecThisWeek = weekRecords.reduce((sum, r) => sum + (r.resistanceTimeSec || 0), 0);
+      const resistanceSecThisWeek = weekRecords.reduce((sum, r) => {
+        const isFull = normalizeDayType(r.dayType, r.resistanceTimeSec) === 'full';
+        return isFull ? sum + (r.resistanceTimeSec || 0) : sum;
+      }, 0);
       return {
         sessionsThisWeek: weekRecords.length,
         resistanceMinutesThisWeek: Math.round((resistanceSecThisWeek / 60) * 10) / 10,
