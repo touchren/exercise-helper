@@ -40,8 +40,7 @@
     modalText: $('modal-text'),
     modalActions: $('modal-actions'),
     btnConfirmYes: $('btn-confirm-yes'),
-    btnConfirmNo: $('btn-confirm-no'),
-    btnConfirmPauseLeave: $('btn-confirm-pause-leave')
+    btnConfirmNo: $('btn-confirm-no')
   };
 
   // ---------- 全局状态 ----------
@@ -113,25 +112,13 @@
       if (window.history && window.history.pushState) {
         window.history.pushState({ screen: 'main' }, '');
       }
-      showBackConfirm(
-        () => {
-          // 暂停并离开：暂停引擎后离开（不保存记录）
-          if (engine && workoutState === 'running') {
-            engine.pause();
-          }
-          stopElapsedTimer();
-          audio.stopAmbient();
-          releaseWakeLock();
-          navigate();
-        },
-        () => {
-          // 直接离开：停止引擎并保存记录
-          const stats = engine ? engine.stop() : null;
-          if (stats) saveRecord(stats);
-          resetWorkoutUi();
-          navigate();
-        }
-      );
+      showConfirm('训练进行中，确定退出？本次进度将被记录。', () => {
+        // 退出：停止引擎并保存记录
+        const stats = engine ? engine.stop() : null;
+        if (stats) saveRecord(stats);
+        resetWorkoutUi();
+        navigate();
+      });
       return;
     }
     navigate();
@@ -140,30 +127,15 @@
 
   // ---------- 确认弹窗（替代 alert/confirm） ----------
   let confirmHandler = null;
-  let confirmPauseLeaveHandler = null;
   function showConfirm(text, onYes) {
     confirmHandler = onYes;
-    confirmPauseLeaveHandler = null;
     el.modalText.textContent = text;
     el.btnConfirmYes.textContent = '确认';
-    el.btnConfirmPauseLeave.classList.add('hidden');
-    el.modalActions.classList.remove('modal-actions--back');
-    el.modalConfirm.classList.remove('hidden');
-  }
-  // 三按钮返回确认：暂停并离开 / 直接离开 / 取消
-  function showBackConfirm(onPauseLeave, onDirectLeave) {
-    confirmHandler = onDirectLeave;
-    confirmPauseLeaveHandler = onPauseLeave;
-    el.modalText.textContent = '训练进行中，确定离开？';
-    el.btnConfirmYes.textContent = '直接离开';
-    el.btnConfirmPauseLeave.classList.remove('hidden');
-    el.modalActions.classList.add('modal-actions--back');
     el.modalConfirm.classList.remove('hidden');
   }
   function hideConfirm() {
     el.modalConfirm.classList.add('hidden');
     confirmHandler = null;
-    confirmPauseLeaveHandler = null;
   }
   el.btnConfirmYes.addEventListener('click', () => {
     const handler = confirmHandler;
@@ -171,11 +143,6 @@
     if (typeof handler === 'function') handler();
   });
   el.btnConfirmNo.addEventListener('click', hideConfirm);
-  el.btnConfirmPauseLeave.addEventListener('click', () => {
-    const handler = confirmPauseLeaveHandler;
-    hideConfirm();
-    if (typeof handler === 'function') handler();
-  });
 
   // ---------- 模式切换 ----------
   function initModeSwitch() {
