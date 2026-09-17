@@ -10,7 +10,7 @@ const DEFAULT_EXERCISES = [
     name: '猫牛流动',
     type: 'warmup',
     cycles: 8,
-    cycleSec: 5,
+    cycleSec: 10,
     breathing: true,
     restAfterSec: 0,
     intro: '四点跪撑，双手在肩正下方、双膝在髋正下方。弓背吸气，塌腰呼气，缓慢活动整条脊柱，作为基础热身。',
