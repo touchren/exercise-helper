@@ -50,7 +50,15 @@ const KEY_RECORDS = 'morning:records';
     if (Array.isArray(stored.exercises)) {
       merged.exercises = base.exercises.map((defaultEx) => {
         const saved = stored.exercises.find((e) => e && e.id === defaultEx.id);
-        return saved ? { ...defaultEx, ...saved } : { ...defaultEx };
+        if (!saved) return { ...defaultEx };
+        const fixed = { ...defaultEx, ...saved };
+        if (defaultEx.id === 'cat-cow'
+          && saved.cycles === 8 && saved.cycleSec === 5
+          && defaultEx.cycles === 10 && defaultEx.cycleSec === 8) {
+          fixed.cycles = defaultEx.cycles;
+          fixed.cycleSec = defaultEx.cycleSec;
+        }
+        return fixed;
       });
     }
     return merged;
