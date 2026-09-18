@@ -10,8 +10,8 @@ const DEFAULT_EXERCISES = [
     id: 'cat-cow',
     name: '猫牛流动',
     type: 'warmup',
-    cycles: 8,          // 循环次数
-    cycleSec: 10,       // 每次循环秒数（总时长 = cycles * cycleSec）
+    cycles: 10,         // 循环次数
+    cycleSec: 8,        // 每次循环秒数（总时长 = cycles * cycleSec）
     breathing: true,    // 每 5 秒交替播报「吸气/呼气」
     intro: '四点跪撑，双手在肩正下方、双膝在髋正下方。全程用鼻子弓背吸气，塌腰呼气，缓慢活动整条脊柱，幅度适中不猛甩。',
     tips: '全程用鼻子弓背吸气、塌腰呼气；缓慢活动整条脊柱，幅度适中不猛甩。'
@@ -286,6 +286,7 @@ function buildWarmupSteps(ex) {
     type: 'hold',
     tts: null,
     duration: totalSec,
+    cycleSec: ex.cycleSec,
     breathing: true,
     exerciseName: ex.name,
     exerciseId: ex.id,
