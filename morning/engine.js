@@ -314,7 +314,7 @@ class WorkoutEngine {
         const phase = step.cycleSec ? step.cycleSec / 2 : 5;
         const period = step.cycleSec || 10;
         for (let t = 0; t < step.duration - 1; t += phase) {
-          const word = t % period === 0 ? '吸气' : '呼气';
+          const word = t % period === 0 ? '弓背吸气' : '塌腰呼气';
           events.push({ at: t, run: () => this.audio.speakCount(word) });
         }
       }
