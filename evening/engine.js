@@ -42,9 +42,9 @@ class WorkoutEngine {
     this.totalPausedMs = 0;
     this.startTs = Date.now();
     this.state = 'running';
-    // 训练开场白：第一个动作 announce 前先播「闻鼓起练」，播完再进入引导
+    // 训练开场白：第一个动作 announce 前先播「晨钟暮鼓，闻鼓起练」，播完再进入引导
     const first = this.steps[0];
-    const opening = first && first.type === 'announce' && first.tts.startsWith('开始训练') ? '闻鼓起练' : null;
+    const opening = first && first.type === 'announce' && first.tts.startsWith('开始训练') ? '晨钟暮鼓，闻鼓起练' : null;
     this._startStep(0, opening);
   }
 

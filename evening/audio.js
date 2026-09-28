@@ -18,7 +18,7 @@ function _ttsUrl(file) {
 // 硬编码避免真机微信内 fetch manifest 失败导致映射为空（v44-v46 无声的根因）。
 const TTS_MAP_ENTRIES = [
   // 训练开场白：engine.js 在首个 announce 前串行播报，非 step.tts，gen-all.js 不会生成
-  ['闻鼓起练', 'start-wengu-3f2fefb2623a.mp3'],
+  ['晨钟暮鼓，闻鼓起练', 'start-dfa819621ba5.mp3'],
   ['开始训练。第一个动作，猫牛流动，10次循环。四点跪撑，双手在肩正下方、双膝在髋正下方。全程用鼻子弓背吸气，塌腰呼气，缓慢活动整条脊柱，幅度适中不猛甩。', 'ann-cat-cow-0-e1b7f4bb4fcd.mp3'],
   ['准备', 'token-0-ddcf6e77b0ee.mp3'],
   ['3', 'num-3-4e07408562be.mp3'],
