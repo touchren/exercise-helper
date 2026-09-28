@@ -492,8 +492,69 @@ input:focus-visible {
   pointer-events: none;
 }
 
-.footer-version {
-  margin-bottom: 2px;
+.last-record-card {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 12px 16px;
+  background: var(--bg-elev);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  color: var(--text);
+  cursor: pointer;
+  user-select: none;
+  transition: background 0.2s ease, transform 0.1s ease;
+}
+
+.last-record-card:active {
+  transform: scale(0.98);
+  background: var(--bg-soft);
+}
+
+.last-record-label {
+  flex-shrink: 0;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--accent-soft);
+}
+
+.last-record-time {
+  flex: 1;
+  font-size: 14px;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+}
+
+.last-record-detail {
+  font-size: 12px;
+  color: var(--text-dim);
+}
+
+.last-record-arrow {
+  flex-shrink: 0;
+  font-size: 16px;
+  color: var(--text-faint);
+}
+
+.footer-slogan {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  margin-bottom: 4px;
+  font-size: 13px;
+  color: var(--text-dim);
+  letter-spacing: 0.2em;
+}
+
+.footer-slogan-text {
+  text-indent: 0.2em;
+}
+
+.footer-logo {
+  width: 18px;
+  height: 18px;
+  border-radius: 5px;
 }
 
 .footer-filing {

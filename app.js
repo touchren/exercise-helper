@@ -6,7 +6,7 @@
 (() => {
   'use strict';
 
-  const APP_VERSION = 'workout-selector-v97-260928104301';
+  const APP_VERSION = 'workout-selector-v98-260928165207';
 
   // ---------- DOM 引用 ----------
   const $ = (id) => document.getElementById(id);
@@ -307,11 +307,82 @@
     });
   }
 
-  // ---------- 版本号（页面底部） ----------
-  function renderFooterVersion() {
-    const el = document.getElementById('footer-version');
+  // ---------- 上次训练入口 ----------
+  function renderLastRecord() {
+    const el = document.getElementById('last-record');
     if (!el) return;
-    el.textContent = `版本：${APP_VERSION}`;
+
+    const records = [];
+    WORKOUT_REGISTRY.forEach((w) => {
+      try {
+        const raw = localStorage.getItem(`${w.id}:records`);
+        if (!raw) return;
+        const list = JSON.parse(raw);
+        if (!Array.isArray(list)) return;
+        list.forEach((r) => {
+          records.push(Object.assign({}, r, { workoutId: w.id, path: w.path }));
+        });
+      } catch (err) {
+        console.warn('[selector] 读取训练记录失败', w.id, err);
+      }
+    });
+    if (records.length === 0) return;
+
+    records.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
+    const latest = records[0];
+
+    let detailText;
+    if (!latest.completed) {
+      detailText = '中止训练';
+    } else if (normalizeDayType(latest.dayType, latest.resistanceTimeSec) === 'full') {
+      detailText = `抗阻 ${formatMinutes(latest.resistanceTimeSec)} 分钟`;
+    } else {
+      detailText = '放松训练';
+    }
+
+    el.classList.remove('hidden');
+    el.innerHTML = `
+      <span class="last-record-label">上次训练</span>
+      <span class="last-record-time">${formatRelativeTime(latest.date)}</span>
+      <span class="last-record-detail">${detailText}</span>
+      <span class="last-record-arrow">›</span>
+    `;
+    el.addEventListener('click', () => {
+      window.location.href = latest.path;
+    });
+    el.addEventListener('keydown', (ev) => {
+      if (ev.key === 'Enter' || ev.key === ' ') {
+        ev.preventDefault();
+        window.location.href = latest.path;
+      }
+    });
+  }
+
+  function normalizeDayType(dayType, resistanceTimeSec) {
+    if (dayType === 'full' || dayType === 'stretch') return dayType;
+    return Number(resistanceTimeSec) > 0 ? 'full' : 'stretch';
+  }
+
+  function formatMinutes(sec) {
+    const safeSec = Math.max(0, Number(sec) || 0);
+    return Math.round((safeSec / 60) * 10) / 10;
+  }
+
+  function formatRelativeTime(isoString) {
+    const d = new Date(isoString);
+    if (Number.isNaN(d.getTime())) return '未知日期';
+    const pad = (n) => String(n).padStart(2, '0');
+    const hm = `${pad(d.getHours())}:${pad(d.getMinutes())}`;
+    const now = new Date();
+    const startOfToday = new Date(now.getFullYear(), now.getMonth(), now.getDate()).getTime();
+    const startOfThatDay = new Date(d.getFullYear(), d.getMonth(), d.getDate()).getTime();
+    const diffDays = Math.round((startOfToday - startOfThatDay) / 86400000);
+    if (diffDays <= 0) return `今天 ${hm}`;
+    if (diffDays === 1) return `昨天 ${hm}`;
+    if (d.getFullYear() === now.getFullYear()) {
+      return `${d.getMonth() + 1}月${d.getDate()}日 ${hm}`;
+    }
+    return `${d.getFullYear()}年${d.getMonth() + 1}月${d.getDate()}日 ${hm}`;
   }
 
   // ---------- 备案信息（filing.js 中配置） ----------
@@ -327,7 +398,7 @@
   }
 
   // ---------- 初始化 ----------
-  renderFooterVersion();
+  renderLastRecord();
   renderFiling();
   renderMain();
   maybeAutoEnter();
