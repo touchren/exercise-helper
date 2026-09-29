@@ -3,7 +3,7 @@
  * 缓存优先策略：首次访问后全量离线可用。
  * 版本号变更时激活阶段清理旧缓存。
  */
-const CACHE_NAME = 'evening-v101';
+const CACHE_NAME = 'evening-v102';
 
 const APP_SHELL = [
   './',
