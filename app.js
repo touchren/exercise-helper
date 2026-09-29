@@ -6,7 +6,7 @@
 (() => {
   'use strict';
 
-  const APP_VERSION = 'workout-selector-v100-260929165857';
+  const APP_VERSION = 'workout-selector-v101-260929172002';
 
   // ---------- DOM 引用 ----------
   const $ = (id) => document.getElementById(id);
@@ -397,9 +397,23 @@
     el.innerHTML = html;
   }
 
+  // ---------- 小程序码点击放大预览 ----------
+  function initMiniQrPreview() {
+    const thumb = document.querySelector('.footer-miniqr');
+    const modal = document.getElementById('miniqr-modal');
+    if (!thumb || !modal) return;
+    thumb.addEventListener('click', () => {
+      modal.classList.remove('hidden');
+    });
+    modal.addEventListener('click', () => {
+      modal.classList.add('hidden');
+    });
+  }
+
   // ---------- 初始化 ----------
   renderLastRecord();
   renderFiling();
   renderMain();
+  initMiniQrPreview();
   maybeAutoEnter();
 })();

@@ -64,7 +64,7 @@ body {
 .screen {
   display: none;
   flex-direction: column;
-  padding: 16px 18px calc(64px + var(--safe-bottom));
+  padding: 16px 18px calc(216px + var(--safe-bottom));
 }
 
 .screen.active {
@@ -534,6 +534,49 @@ input:focus-visible {
   flex-shrink: 0;
   font-size: 16px;
   color: var(--text-faint);
+}
+
+.footer-miniqr {
+  display: block;
+  width: 128px;
+  height: 128px;
+  margin: 0 auto 10px;
+  border-radius: 12px;
+  background: #fff;
+  pointer-events: auto;
+  cursor: zoom-in;
+}
+
+.miniqr-modal {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 100;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(0, 0, 0, 0.88);
+  cursor: pointer;
+  animation: faq-fade-in 0.25s ease both;
+}
+
+.miniqr-modal-img {
+  width: 240px;
+  height: 240px;
+  border-radius: 16px;
+  background: #fff;
+  box-shadow: 0 12px 48px rgba(0, 0, 0, 0.5);
+}
+
+@keyframes faq-fade-in {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
 }
 
 .footer-slogan {
