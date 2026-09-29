@@ -551,6 +551,11 @@ input:focus-visible {
   text-indent: 0.2em;
 }
 
+.footer-dot {
+  font-size: 13px;
+  color: var(--text-dim);
+}
+
 .footer-logo {
   width: 18px;
   height: 18px;
