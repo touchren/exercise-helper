@@ -64,7 +64,7 @@ body {
 .screen {
   display: none;
   flex-direction: column;
-  padding: 16px 18px calc(216px + var(--safe-bottom));
+  padding: 8px 18px calc(164px + var(--safe-bottom));
 }
 
 .screen.active {
@@ -89,7 +89,7 @@ body {
   align-items: center;
   justify-content: space-between;
   gap: 12px;
-  padding: 6px 2px 14px;
+  padding: 6px 2px 10px;
 }
 
 .topbar-title h1.app-title {
@@ -148,7 +148,7 @@ body {
 .scroll-area {
   display: flex;
   flex-direction: column;
-  gap: 16px;
+  gap: 14px;
   padding: 4px 0 8px;
 }
 
@@ -538,10 +538,10 @@ input:focus-visible {
 
 .footer-miniqr {
   display: block;
-  width: 128px;
-  height: 128px;
-  margin: 0 auto 10px;
-  border-radius: 12px;
+  width: 86px;
+  height: 86px;
+  margin: 0 auto 8px;
+  border-radius: 10px;
   background: #fff;
   pointer-events: auto;
   cursor: zoom-in;
