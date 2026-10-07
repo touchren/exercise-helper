@@ -340,7 +340,8 @@
       el.modeSwitch.classList.add('hidden');
       return;
     }
-    const show = workoutState === 'idle' || workoutState === 'done' || workoutState === 'paused';
+    // 仅训练开始前（idle）与完成后（done）显示；训练中（含暂停）不显示
+    const show = workoutState === 'idle' || workoutState === 'done';
     el.modeSwitch.classList.toggle('hidden', !show);
   }
 
