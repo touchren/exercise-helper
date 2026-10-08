@@ -428,7 +428,7 @@ body {
   }
 
     #screen-main.screen {
-    padding-bottom: var(--safe-bottom);
+    padding-bottom: 0;
   }
 
   .workout-area {
