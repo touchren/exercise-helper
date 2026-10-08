@@ -445,7 +445,7 @@ const EXERCISE_ILLUSTRATIONS = {
       setRingProgress(null);
     } else if (phase.stepType === 'count_reps') {
       el.ringWrap.classList.remove('breathing');
-      el.phaseStatus.textContent = `${phase.sideName ? phase.sideName + ' · ' : ''}第${phase.repCount}次/${phase.repTarget}`;
+      el.phaseStatus.textContent = `${phase.sideName ? phase.sideName + ' · ' : ''}第${phase.repCount}/${phase.repTarget}次`;
       setRingProgress(phase.totalSec ? 0 : null);
     } else if (phase.stepType === 'hold') {
       el.ringWrap.classList.add('breathing');
@@ -481,7 +481,7 @@ const EXERCISE_ILLUSTRATIONS = {
   function handleRepCount(n, target) {
     if (workoutState !== 'running' || !currentPhase) return;
     currentPhase.repCount = n;
-    el.phaseStatus.textContent = `${currentPhase.sideName ? currentPhase.sideName + ' · ' : ''}第${n}次/${target}`;
+    el.phaseStatus.textContent = `${currentPhase.sideName ? currentPhase.sideName + ' · ' : ''}第${n}/${target}次`;
     if (currentPhase.totalSec) {
       const progress = ((n - 1) * (currentPhase.totalSec / target)) / currentPhase.totalSec;
       setRingProgress(progress);
