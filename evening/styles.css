@@ -77,6 +77,12 @@ body {
   animation: screen-in 0.35s ease both;
 }
 
+/* 训练主屏底部留白加大：避免被手机浏览器自带底部菜单（如 vivo）遮挡按钮与动作要点；
+   叠加安全区兼容挖孔屏/Home 条（env 在部分安卓 WebView 不生效时退化为固定值） */
+#screen-main.screen {
+  padding-bottom: calc(56px + var(--safe-bottom));
+}
+
 @keyframes screen-in {
   from {
     opacity: 0;
@@ -425,6 +431,10 @@ body {
   .screen {
     /* 矮屏顶部留白同步减半（10→5） */
     padding: 5px 16px calc(12px + var(--safe-bottom));
+  }
+
+  #screen-main.screen {
+    padding-bottom: calc(48px + var(--safe-bottom));
   }
 
   .workout-area {
