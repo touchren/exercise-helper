@@ -427,9 +427,8 @@ body {
     padding: 5px 16px calc(12px + var(--safe-bottom));
   }
 
-  /* 矮屏训练主屏底部留白与左右（16px）取齐，避免按钮贴边视觉不一致 */
-  #screen-main.screen {
-    padding-bottom: calc(16px + var(--safe-bottom));
+    #screen-main.screen {
+    padding-bottom: var(--safe-bottom);
   }
 
   .workout-area {
