@@ -433,7 +433,7 @@ const EXERCISE_ILLUSTRATIONS = {
       el.phaseSub.textContent = '本次训练完成，辛苦了';
       el.phaseStatus.textContent = '已完成';
     } else {
-      const setPart = phase.setNumber ? ` · 第${phase.setNumber}组/${phase.totalSets}组` : '';
+      const setPart = phase.setNumber ? ` · 第${phase.setNumber}/${phase.totalSets}组` : '';
       setPhaseName(`${phase.exerciseName || ''}${setPart}`);
       el.phaseSub.textContent = PHASE_TYPE_LABEL[phase.phaseType] || ' ';
     }
