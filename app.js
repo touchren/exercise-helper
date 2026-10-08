@@ -7,6 +7,8 @@
   'use strict';
 
   const APP_VERSION = 'workout-selector-v158-261008180940';
+  // 纯数字版本号：用于站内跳转 URL ?v= 参数，打破旧 SW/HTTP 缓存（deploy.sh 每次部署递增）
+  const APP_VERSION_NUM = 158;
 
   // ---------- DOM 引用 ----------
   const $ = (id) => document.getElementById(id);
@@ -265,7 +267,7 @@
     const card = event.target.closest('.workout-card');
     if (!card) return;
     const workout = WORKOUT_REGISTRY.find((w) => w.id === card.dataset.id);
-    if (workout) window.location.href = workout.path;
+    if (workout) window.location.href = workout.path + '?v=' + APP_VERSION_NUM;
   });
 
   // ---------- 自动进入匹配 ----------
@@ -294,7 +296,7 @@
 
     // 恰好命中一个时段才自动进入；多个命中或未命中时停留在选择页
     if (matched.length === 1) {
-      window.location.href = matched[0].path;
+      window.location.href = matched[0].path + '?v=' + APP_VERSION_NUM;
     }
   }
 
@@ -353,7 +355,7 @@
     el.addEventListener('keydown', (ev) => {
       if (ev.key === 'Enter' || ev.key === ' ') {
         ev.preventDefault();
-        window.location.href = latest.path;
+        window.location.href = latest.path + '?v=' + APP_VERSION_NUM;
       }
     });
   }

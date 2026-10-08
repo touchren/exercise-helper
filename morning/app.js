@@ -6,6 +6,9 @@
 (() => {
   'use strict';
 
+  // 纯数字版本号：用于返回选择页跳转 ?v= 参数，打破旧 SW/HTTP 缓存（deploy.sh 每次部署递增）
+  const APP_VERSION_NUM = 158;
+
   // ---------- DOM 引用 ----------
   const $ = (id) => document.getElementById(id);
   const el = {
@@ -112,7 +115,7 @@
     const navigate = () => {
       // 告知选择页用户是主动返回，不再自动匹配
       sessionStorage.setItem('selector:returned', 'true');
-      window.location.href = '../';
+      window.location.href = '../?v=' + APP_VERSION_NUM;
     };
     if (workoutState === 'running' || workoutState === 'paused') {
       // 用户可能取消，重新 push 哨兵恢复返回拦截能力

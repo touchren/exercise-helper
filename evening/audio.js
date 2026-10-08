@@ -7,10 +7,12 @@
 
 // 当前音色（tts/ 下的子文件夹名）。切换音色：把同名字的 mp3 放进新文件夹，只改此常量。
 const TTS_VOICE = 'xiaoxiao';
+// 纯数字版本号：追加到 tts mp3 URL ?v=，打破旧 SW cache-first / 浏览器启发式缓存（deploy.sh 每次部署递增）
+const APP_VERSION_NUM = 158;
 
-/** 拼接预生成语音完整相对路径：tts/{音色}/{文件名}。 */
+/** 拼接预生成语音完整相对路径：tts/{音色}/{文件名}，带版本号防缓存。 */
 function _ttsUrl(file) {
-  return '../tts/' + TTS_VOICE + '/' + file;
+  return '../tts/' + TTS_VOICE + '/' + file + '?v=' + APP_VERSION_NUM;
 }
 
 // 微信降级：预生成语音的文本→文件映射（只存文件名，路径由 TTS_VOICE 拼接）。
