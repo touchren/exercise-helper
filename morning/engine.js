@@ -190,11 +190,19 @@ class WorkoutEngine {
     step.tokens.forEach((token, i) => {
       if (fromElapsedSec != null && i <= fromElapsedSec) return;
       const delay = Math.max(0, i * 1000 - baseMs);
-      const timer = setTimeout(() => {
+      const fire = () => {
         if (this.state !== 'running' || this.currentStep !== step) return;
         this.audio.speakCount(token);
-      }, delay);
-      this.countdownTimers.push(timer);
+        // 同步通知 UI 当前倒计时数字；首个 token 在本帧立即回调，避免闪现占位文案
+        if (typeof this.callbacks.onCountdownToken === 'function') {
+          this.callbacks.onCountdownToken(token);
+        }
+      };
+      if (delay === 0) {
+        fire();
+        return;
+      }
+      this.countdownTimers.push(setTimeout(fire, delay));
     });
   }
 

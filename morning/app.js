@@ -16,6 +16,7 @@
     phaseName: $('phase-name'),
     phaseSub: $('phase-sub'),
     phaseStatus: $('phase-status'),
+    countdownNumber: $('countdown-number'),
     elapsedTime: $('elapsed-time'),
     tips: $('tips'),
     ringProgress: $('ring-progress'),
@@ -185,6 +186,26 @@
     el.phaseName.classList.add('fade-in');
   }
 
+  function showCountdownToken(token) {
+    el.phaseStatus.classList.add('hidden');
+    el.countdownNumber.textContent = token;
+    el.countdownNumber.classList.remove('hidden');
+    el.countdownNumber.classList.remove('pop');
+    void el.countdownNumber.offsetWidth;
+    el.countdownNumber.classList.add('pop');
+  }
+
+  function hideCountdown() {
+    el.countdownNumber.classList.add('hidden');
+    el.countdownNumber.textContent = '';
+    el.phaseStatus.classList.remove('hidden');
+  }
+
+  function handleCountdownToken(token) {
+    if (workoutState !== 'running') return;
+    showCountdownToken(token);
+  }
+
   function renderIdleSub() {
     const settings = { ...SettingsUI.currentSettings(), mode: currentMode };
     const steps = buildStepSequence(settings.exercises, settings);
@@ -298,6 +319,7 @@
         onPhaseChange: handlePhaseChange,
         onTick: handleTick,
         onRepCount: handleRepCount,
+        onCountdownToken: handleCountdownToken,
         onComplete: handleComplete
       }
     });
@@ -331,6 +353,7 @@
     renderIdleSub();
     el.phaseStatus.textContent = '准备开始';
     el.phaseStatus.classList.remove('paused-text');
+    hideCountdown();
     el.tips.classList.add('hidden');
     el.tips.textContent = '';
     setRingProgress(null);
@@ -425,6 +448,7 @@ const EXERCISE_ILLUSTRATIONS = {
 
   function renderPhase(phase) {
     if (!phase) return;
+    hideCountdown();
     // 训练中内容上移（示意图上方留白减半），idle 时由 renderIdleUi 移除
     el.workoutArea.classList.add('train-top');
     updateExerciseIllustration(phase.exerciseId);
@@ -497,6 +521,7 @@ const EXERCISE_ILLUSTRATIONS = {
     audio.stopAmbient();
     releaseWakeLock();
     saveRecord(stats);
+    hideCountdown();
     setPhaseName('训练结束');
     if (sessionMode === 'stretch') {
       el.phaseSub.textContent = `用时 ${formatDuration(stats.totalTimeSec)} · 放松训练`;
