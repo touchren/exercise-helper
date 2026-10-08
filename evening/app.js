@@ -10,6 +10,12 @@
   const $ = (id) => document.getElementById(id);
   const el = {
     screens: { main: $('screen-main'), settings: $('screen-settings'), records: $('screen-records') },
+    exerciseIllustrationWrap: $('exercise-illustration-wrap'),
+    exerciseIllustration: $('exercise-illustration'),
+    illustrationPreview: $('illustration-preview'),
+    illustrationPreviewTitle: $('illustration-preview-title'),
+    illustrationPreviewImg: $('illustration-preview-img'),
+    illustrationPreviewTips: $('illustration-preview-tips'),
     phaseName: $('phase-name'),
     phaseSub: $('phase-sub'),
     phaseStatus: $('phase-status'),
@@ -40,7 +46,8 @@
     modalText: $('modal-text'),
     modalActions: $('modal-actions'),
     btnConfirmYes: $('btn-confirm-yes'),
-    btnConfirmNo: $('btn-confirm-no')
+    btnConfirmNo: $('btn-confirm-no'),
+    workoutArea: $('workout-area')
   };
 
   // ---------- 全局状态 ----------
@@ -313,6 +320,10 @@
   }
 
   function renderIdleUi() {
+    // 训练区恢复居中布局，移除训练中的上移态
+    el.workoutArea.classList.remove('train-top');
+    // 开始页不展示示意图，示意图仅在对应动作进行中（准备+锻炼）显示
+    updateExerciseIllustration(null);
     setPhaseName('晚练准备就绪');
     renderIdleSub();
     el.phaseStatus.textContent = '准备开始';
@@ -328,6 +339,8 @@
   function setControlsState() {
     const active = workoutState === 'running' || workoutState === 'paused';
     el.btnStart.disabled = active;
+    // 训练中直接隐藏「开始」按钮（暂停后由「继续」恢复），界面更干净不再占位
+    el.btnStart.classList.toggle('hidden', active);
     el.btnPause.disabled = !active;
     el.btnStop.disabled = !active;
     el.btnSkip.disabled = !active;
@@ -359,8 +372,62 @@
     if (workoutState !== 'paused') renderPhase(phase);
   }
 
+    
+  
+  // 动作示意图静态资源映射（bg 为该图边缘采样色，用于填充卡片两侧背景，避免色差）
+const EXERCISE_ILLUSTRATIONS = {
+  "cat-cow": { src: "../assets/images/cat-cow-gemini.webp", bg: "linear-gradient(to bottom, #0a0c1b 0%, #0c2632 25%, #124b56 50%, #091b29 65%, #0a0c1b 100%) left / calc((100% - var(--img-w)) / 2) 100% no-repeat, linear-gradient(to bottom, #0a0c1b 0%, #0b2430 25%, #114a54 50%, #0a1c2b 65%, #0a0c1b 100%) right / calc((100% - var(--img-w)) / 2) 100% no-repeat" },
+  "wall-angel": { src: "../assets/images/wall-angel-gemini.webp", bg: "#010a1b" },
+  "eccentric-pullup": { src: "../assets/images/eccentric-pullup-gemini.webp", bg: "linear-gradient(to bottom, #2e4254 0%, #273a46 25%, #253542 50%, #1e2a36 75%, #1a222d 100%) left / calc((100% - var(--img-w)) / 2) 100% no-repeat, linear-gradient(to bottom, #212f3c 0%, #1c2532 25%, #181f2a 50%, #141925 75%, #111320 100%) right / calc((100% - var(--img-w)) / 2) 100% no-repeat" },
+  "doorframe-stretch": { src: "../assets/images/doorframe-stretch-gemini.webp", bg: "#0d121d" },
+  "bodyweight-squat": { src: "../assets/images/bodyweight-squat-gemini.webp", bg: "linear-gradient(to bottom, #061422 0%, #060b15 50%, #050915 100%) left / calc((100% - var(--img-w)) / 2) 100% no-repeat, linear-gradient(to bottom, #051320 0%, #050915 50%, #050915 100%) right / calc((100% - var(--img-w)) / 2) 100% no-repeat" },
+  "standing-quad-stretch": { src: "../assets/images/standing-quad-stretch-gemini.webp", bg: "#060b12" },
+  "bird-dog": { src: "../assets/images/bird-dog-gemini.webp", bg: "#080d18" },
+  "balasana": { src: "../assets/images/balasana-gemini.webp", bg: "#0c111c" }
+};
+
+  function updateExerciseIllustration(exerciseId) {
+    if (!el.exerciseIllustrationWrap || !el.exerciseIllustration) return;
+    const item = exerciseId ? EXERCISE_ILLUSTRATIONS[exerciseId] : null;
+    if (item) {
+      el.exerciseIllustration.src = item.src;
+      el.exerciseIllustrationWrap.style.background = item.bg;
+      el.exerciseIllustrationWrap.classList.remove("hidden");
+    } else {
+      el.exerciseIllustrationWrap.classList.add("hidden");
+      el.exerciseIllustrationWrap.style.background = "";
+      el.exerciseIllustration.removeAttribute("src");
+    }
+  }
+
+  // ---------- 示意图全屏预览：点击卡片放大，点击遮罩任意处关闭 ----------
+  function openIllustrationPreview() {
+    if (!el.illustrationPreview) return;
+    if (el.exerciseIllustrationWrap.classList.contains('hidden') || !el.exerciseIllustration.getAttribute('src')) return;
+    el.illustrationPreviewTitle.textContent = el.phaseName.textContent;
+    el.illustrationPreviewImg.src = el.exerciseIllustration.getAttribute('src');
+    if (el.tips.classList.contains('hidden') || !el.tips.textContent) {
+      el.illustrationPreviewTips.classList.add('hidden');
+    } else {
+      el.illustrationPreviewTips.textContent = el.tips.textContent;
+      el.illustrationPreviewTips.classList.remove('hidden');
+    }
+    el.illustrationPreview.classList.remove('hidden');
+  }
+
+  function closeIllustrationPreview() {
+    el.illustrationPreview.classList.add('hidden');
+    el.illustrationPreviewImg.removeAttribute('src');
+  }
+
+  el.exerciseIllustrationWrap.addEventListener('click', openIllustrationPreview);
+  el.illustrationPreview.addEventListener('click', closeIllustrationPreview);
+
   function renderPhase(phase) {
     if (!phase) return;
+    // 训练中内容上移（示意图上方留白减半），idle 时由 renderIdleUi 移除
+    el.workoutArea.classList.add('train-top');
+    updateExerciseIllustration(phase.exerciseId);
     if (phase.phaseType === 'complete') {
       setPhaseName('训练结束');
       el.phaseSub.textContent = '本次训练完成，辛苦了';

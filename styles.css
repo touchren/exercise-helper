@@ -606,12 +606,34 @@ input:focus-visible {
 }
 
 .footer-filing {
-  display: flex;
+  display: grid;
+  grid-template-columns: 1fr auto 1fr;
+  justify-items: center;
   align-items: center;
-  justify-content: center;
   gap: 6px;
   font-size: 10px;
   line-height: 1.6;
+  height: 1.6em;
+}
+
+.filing-item:first-child {
+  justify-self: end;
+}
+
+.filing-item:last-child {
+  justify-self: start;
+}
+
+.filing-item {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  height: 100%;
+}
+
+.filing-sep {
+  line-height: 1;
+  transform: translateY(-2px);
 }
 
 .filing-link {
@@ -632,6 +654,8 @@ input:focus-visible {
   width: 12px;
   height: 12px;
   flex-shrink: 0;
+  vertical-align: middle;
+  margin-bottom: 1px;
 }
 
 .filing-sep {
@@ -669,8 +693,9 @@ input:focus-visible {
 /* ---------- SEO 静态内容区 ---------- */
 .seo-faq {
   margin-top: 0;
-  padding: 16px 18px;
-  background: linear-gradient(135deg, rgba(255, 120, 71, 0.06) 0%, rgba(62, 207, 142, 0.04) 100%);
+  padding: 16px 18px 8px;
+  /* 与运动卡片背景色一致，避免色调差异 */
+  background: var(--bg-elev);
   border: 1px solid var(--border);
   border-radius: 14px;
 }

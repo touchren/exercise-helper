@@ -17,6 +17,10 @@ class WorkoutEngine {
     this.callbacks = callbacks || {};
 
     this.state = 'idle';            // idle | running | paused | done
+    // 动作配置索引：步骤未自带 tips 时（announce/countdown/rest/transition）由此取动作要点
+    this.exerciseMap = new Map(
+      (this.settings.exercises || DEFAULT_EXERCISES).map((ex) => [ex.id, ex])
+    );
     this.steps = [];
     this.stepIndex = 0;
     this.currentStep = null;
@@ -332,8 +336,14 @@ class WorkoutEngine {
 
   _emitPhase(step) {
     if (typeof this.callbacks.onPhaseChange !== 'function') return;
+    let tips = step.tips || null;
+    if (!tips && step.exerciseId && this.exerciseMap.has(step.exerciseId)) {
+      // 准备/休息等步骤未自带 tips 时，提前取动作要点，保证「准备阶段即显示、直至动作结束」
+      tips = this.exerciseMap.get(step.exerciseId).tips || null;
+    }
     this.callbacks.onPhaseChange({
       exerciseName: step.exerciseName,
+      exerciseId: step.exerciseId,
       setNumber: step.setNumber,
       totalSets: step.totalSets,
       side: step.side,
@@ -344,7 +354,7 @@ class WorkoutEngine {
       totalSec: step.duration != null ? step.duration : null,
       repCount: 0,
       repTarget: step.count != null ? step.count : null,
-      tips: step.tips || null
+      tips
     });
   }
 
