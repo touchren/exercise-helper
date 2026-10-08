@@ -169,10 +169,10 @@ body {
   overflow: hidden;
 }
 
-/* 训练中内容上移：示意图上方留白由居中态约 47px 减半再缩至 12px（app.js renderPhase 添加该类、renderIdleUi 移除） */
+/* 训练中内容上移：示意图上方留白由居中态约 47px 减半再缩至 8px（app.js renderPhase 添加该类、renderIdleUi 移除） */
 .workout-area.train-top {
   align-items: flex-start;
-  padding-top: 12px;
+  padding-top: 8px;
 }
 
 .phase-card {
