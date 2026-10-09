@@ -539,6 +539,7 @@ body {
   margin: 0 auto 8px;
   border-radius: 14px;
   overflow: hidden;
+  position: relative;
   /* 兜底底色：实际背景由 app.js 按各示意图边缘采样色动态设置；--img-w 供猫牛图左右渐变按图片显示宽度留白 */
   --img-w: 148px;
   background: #101a34;
@@ -559,6 +560,64 @@ body {
   height: 100%;
   object-fit: contain;
   display: block;
+}
+
+/* ---------- 示意图全屏提示按钮（右上角极淡芯片 + CSS 四角撑开图标） ---------- */
+.illustration-fullscreen-btn {
+  position: absolute;
+  top: 6px;
+  right: 6px;
+  width: 20px;
+  height: 20px;
+  padding: 0;
+  margin: 0;
+  border-radius: 6px;
+  background: rgba(4, 5, 12, 0.12);
+  border: 1px solid rgba(255, 255, 255, 0.07);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: rgba(255, 255, 255, 0.6);
+  z-index: 2;
+  box-sizing: border-box;
+  cursor: pointer;
+  -webkit-appearance: none;
+  appearance: none;
+}
+
+/* 四角括号：纯 CSS border 绘制（无字体字形 / SVG / 图片） */
+.fs-corner {
+  position: absolute;
+  width: 6px;
+  height: 6px;
+}
+
+.fs-tl {
+  top: 4px;
+  left: 4px;
+  border-top: 1px solid;
+  border-left: 1px solid;
+}
+
+.fs-tr {
+  top: 4px;
+  right: 4px;
+  border-top: 1px solid;
+  border-right: 1px solid;
+}
+
+.fs-bl {
+  bottom: 4px;
+  left: 4px;
+  border-bottom: 1px solid;
+  border-left: 1px solid;
+}
+
+.fs-br {
+  bottom: 4px;
+  right: 4px;
+  border-bottom: 1px solid;
+  border-right: 1px solid;
 }
 
 /* 示意图全局规则必须在其后覆盖（同特异性下后声明者胜出），故独立媒体查询放在文件末尾 */
