@@ -6,9 +6,9 @@
 (() => {
   'use strict';
 
-  const APP_VERSION = 'workout-selector-v171-261009110102';
+  const APP_VERSION = 'workout-selector-v173-261009221426';
   // 纯数字版本号：用于站内跳转 URL ?v= 参数，打破旧 SW/HTTP 缓存（deploy.sh 每次部署递增）
-  const APP_VERSION_NUM = 171;
+  const APP_VERSION_NUM = 173;
 
   // ---------- DOM 引用 ----------
   const $ = (id) => document.getElementById(id);
