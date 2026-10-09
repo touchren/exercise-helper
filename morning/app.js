@@ -435,18 +435,29 @@ const EXERCISE_ILLUSTRATIONS = {
   }
 
   // ---------- 示意图全屏预览：点击卡片放大，点击遮罩任意处关闭 ----------
-  function openIllustrationPreview() {
-    if (!el.illustrationPreview) return;
-    if (el.exerciseIllustrationWrap.classList.contains('hidden') || !el.exerciseIllustration.getAttribute('src')) return;
+  // 将卡片当前动作同步到全屏预览：打开时与训练中动作切换时共用
+  function syncIllustrationPreview() {
+    if (!el.illustrationPreview || el.illustrationPreview.classList.contains('hidden')) return;
+    const src = el.exerciseIllustration.getAttribute('src');
+    if (!src) {
+      closeIllustrationPreview();
+      return;
+    }
     el.illustrationPreviewTitle.textContent = el.phaseName.textContent;
-    el.illustrationPreviewImg.src = el.exerciseIllustration.getAttribute('src');
+    el.illustrationPreviewImg.src = src;
     if (el.tips.classList.contains('hidden') || !el.tips.textContent) {
       el.illustrationPreviewTips.classList.add('hidden');
     } else {
       el.illustrationPreviewTips.textContent = el.tips.textContent;
       el.illustrationPreviewTips.classList.remove('hidden');
     }
+  }
+
+  function openIllustrationPreview() {
+    if (!el.illustrationPreview) return;
+    if (el.exerciseIllustrationWrap.classList.contains('hidden') || !el.exerciseIllustration.getAttribute('src')) return;
     el.illustrationPreview.classList.remove('hidden');
+    syncIllustrationPreview();
   }
 
   function closeIllustrationPreview() {
@@ -505,6 +516,7 @@ const EXERCISE_ILLUSTRATIONS = {
     } else {
       el.tips.classList.add('hidden');
     }
+    syncIllustrationPreview();
   }
 
   function handleTick(remainingSec) {
