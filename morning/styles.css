@@ -393,9 +393,32 @@ body {
 
 .controls-row {
   display: grid;
-  grid-template-columns: 1fr 1fr 1.4fr;
-  gap: 10px;
+  grid-template-columns: 1fr 1.5fr 1fr;
+  gap: 12px;
 }
+
+/* 行内控制按钮：图标 + 文字水平居中 */
+.controls-row .btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 7px;
+  padding: 0 8px;
+}
+
+.btn-ico {
+  flex: 0 0 auto;
+  display: block;
+}
+
+.btn-label {
+  line-height: 1.2;
+}
+
+/* 暂停/继续：按钮切到「继续」时把暂停图标换成播放图标 */
+.btn-pause .ico-play { display: none; }
+.btn-pause.is-resume .ico-pause { display: none; }
+.btn-pause.is-resume .ico-play { display: block; }
 
 .btn-pause {
   background: linear-gradient(135deg, #f8d469 0%, #d9a62e 100%);
@@ -403,15 +426,20 @@ body {
 }
 
 .btn-stop {
-  background: linear-gradient(135deg, #ee6a6a 0%, #c73e3e 100%);
-  color: #2b0808;
+  background: transparent;
+  border: 1px solid rgba(224, 82, 82, 0.55);
+  color: #ff8f8f;
+}
+
+.btn-stop:not(:disabled):active {
+  background: rgba(224, 82, 82, 0.16);
 }
 
 .btn-skip {
   background: var(--bg-elev);
   border: 1px solid var(--border);
   color: var(--text-dim);
-  font-size: 15px;
+  font-size: 16px;
   font-weight: 600;
 }
 

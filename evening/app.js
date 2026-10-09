@@ -7,7 +7,7 @@
   'use strict';
 
   // 纯数字版本号：用于返回选择页跳转 ?v= 参数，打破旧 SW/HTTP 缓存（deploy.sh 每次部署递增）
-  const APP_VERSION_NUM = 169;
+  const APP_VERSION_NUM = 171;
 
   // ---------- DOM 引用 ----------
   const $ = (id) => document.getElementById(id);
@@ -35,6 +35,8 @@
     btnPause: $('btn-pause'),
     btnStop: $('btn-stop'),
     btnSkip: $('btn-skip'),
+    controlsRow: document.querySelector('.controls-row'),
+    btnPauseLabel: $('btn-pause-label'),
     btnBackHome: $('btn-back-home'),
     btnSettings: $('btn-settings'),
     btnRecords: $('btn-records'),
@@ -268,7 +270,7 @@
       engine.pause();
       workoutState = 'paused';
       stopElapsedTimer();
-      el.btnPause.textContent = '继续';
+      setPauseState(true);
       el.phaseStatus.textContent = '已暂停';
       el.phaseStatus.classList.add('paused-text');
       setControlsState();
@@ -276,7 +278,7 @@
       engine.resume();
       workoutState = 'running';
       startElapsedTimer();
-      el.btnPause.textContent = '暂停';
+      setPauseState(false);
       el.phaseStatus.classList.remove('paused-text');
       renderPhase(currentPhase);
       setControlsState();
@@ -298,7 +300,7 @@
       if (workoutState === 'paused') {
         workoutState = 'running';
         startElapsedTimer();
-        el.btnPause.textContent = '暂停';
+        setPauseState(false);
         el.phaseStatus.classList.remove('paused-text');
       }
       engine.skipPhase();
@@ -368,6 +370,12 @@
     el.ringWrap.classList.remove('pulse');
   }
 
+  // 同步「暂停/继续」按钮的文案与图标
+  function setPauseState(paused) {
+    el.btnPause.classList.toggle('is-resume', paused);
+    el.btnPauseLabel.textContent = paused ? '继续' : '暂停';
+  }
+
   function setControlsState() {
     const active = workoutState === 'running' || workoutState === 'paused';
     el.btnStart.disabled = active;
@@ -376,7 +384,9 @@
     el.btnPause.disabled = !active;
     el.btnStop.disabled = !active;
     el.btnSkip.disabled = !active;
-    el.btnPause.textContent = workoutState === 'paused' ? '继续' : '暂停';
+    setPauseState(workoutState === 'paused');
+    // 非训练状态隐藏三按钮行：开始/完成页只保留「开始」，界面更干净
+    el.controlsRow.classList.toggle('hidden', !active);
     updateModeSwitchVisibility();
   }
 
