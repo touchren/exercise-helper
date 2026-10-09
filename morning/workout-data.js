@@ -172,7 +172,7 @@ function buildResistanceSteps(ex) {
         countsTowardResistance: false
       });
     }
-    steps.push({ type: 'countdown', tokens: ['3', '2', '1'], duration: 3, exerciseName: ex.name, exerciseId: ex.id, setNumber: set, totalSets: ex.sets, phaseType: 'resistance' });
+    steps.push({ type: 'countdown', tokens: ['3', '2', '1', '开始'], duration: 4, exerciseName: ex.name, exerciseId: ex.id, setNumber: set, totalSets: ex.sets, phaseType: 'resistance' });
 
     if (ex.sides) {
       // 双侧动作：先左后右，中间播报换侧
@@ -216,7 +216,7 @@ function buildStretchSteps(ex) {
     phaseType: 'stretch',
     countsTowardResistance: false
   });
-  steps.push({ type: 'countdown', tokens: ['3', '2', '1'], duration: 3, exerciseName: ex.name, exerciseId: ex.id, phaseType: 'stretch' });
+  steps.push({ type: 'countdown', tokens: ['3', '2', '1', '开始'], duration: 4, exerciseName: ex.name, exerciseId: ex.id, phaseType: 'stretch' });
 
   if (ex.sides) {
     steps.push(holdStep(ex, 'left', 0));
@@ -284,7 +284,7 @@ function buildWarmupSteps(ex) {
     phaseType: 'warmup',
     countsTowardResistance: false
   });
-  steps.push({ type: 'countdown', tokens: ['准备', '3', '2', '1'], duration: 4, exerciseName: ex.name, exerciseId: ex.id, phaseType: 'warmup' });
+  steps.push({ type: 'countdown', tokens: ['准备', '3', '2', '1', '开始'], duration: 5, exerciseName: ex.name, exerciseId: ex.id, phaseType: 'warmup' });
   steps.push({
     type: 'hold',
     tts: null,

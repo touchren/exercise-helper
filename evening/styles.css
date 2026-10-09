@@ -230,6 +230,25 @@ body {
   color: var(--yellow);
 }
 
+/* 倒计时大数字：countdown 阶段替代 phase-status 显示于环中心 */
+.countdown-number {
+  font-size: 76px;
+  font-weight: 800;
+  line-height: 1;
+  color: var(--accent-soft);
+  font-variant-numeric: tabular-nums;
+}
+
+.countdown-number.pop {
+  animation: countdown-pop 0.28s ease-out;
+}
+
+@keyframes countdown-pop {
+  0% { opacity: 0; transform: scale(0.6); }
+  60% { opacity: 1; transform: scale(1.08); }
+  100% { opacity: 1; transform: scale(1); }
+}
+
 .elapsed {
   font-size: 26px;
   font-weight: 700;

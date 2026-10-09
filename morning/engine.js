@@ -195,7 +195,7 @@ class WorkoutEngine {
         this.audio.speakCount(token);
         // 同步通知 UI 当前倒计时数字；首个 token 在本帧立即回调，避免闪现占位文案
         if (typeof this.callbacks.onCountdownToken === 'function') {
-          this.callbacks.onCountdownToken(token);
+          this.callbacks.onCountdownToken(token, i, step.tokens.length);
         }
       };
       if (delay === 0) {

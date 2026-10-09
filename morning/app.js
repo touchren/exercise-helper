@@ -201,9 +201,15 @@
     el.phaseStatus.classList.remove('hidden');
   }
 
-  function handleCountdownToken(token) {
+  function handleCountdownToken(token, index, total) {
     if (workoutState !== 'running') return;
     showCountdownToken(token);
+    // 环与每声语音逐格对齐：第 index 声占 index/(total-1)，念到最后一声（开始）时正好转满
+    if (total > 1 && typeof index === 'number') {
+      setRingProgress(Math.min(1, index / (total - 1)));
+    } else {
+      setRingProgress(1);
+    }
   }
 
   function renderIdleSub() {
@@ -499,7 +505,8 @@ const EXERCISE_ILLUSTRATIONS = {
     } else if (currentPhase.stepType === 'rest') {
       el.phaseStatus.textContent = `休息 · 剩余${remainingSec}秒`;
     }
-    if (currentPhase.totalSec) {
+    // countdown 阶段由 onCountdownToken 逐格推进、念「开始」时转满，这里不再按秒覆盖
+    if (currentPhase.totalSec && currentPhase.stepType !== 'countdown') {
       const progress = (currentPhase.totalSec - remainingSec) / currentPhase.totalSec;
       setRingProgress(progress);
     }
