@@ -116,9 +116,6 @@ function resistanceAnnounceText(ex, setNumber) {
   return `${ex.name}，第${setNumber}组，共${ex.sets}组，${ex.reps}次。${ex.intro}`;
 }
 
-/** 计数收尾留白（秒）：最后一次计数语音约 1 秒，避免步骤在数字念完前结束。 */
-const REP_END_TAIL_SEC = 1;
-
 /** 抗阻单侧计数步骤。 */
 function countRepsStep(ex, setNumber, side) {
   const sideName = side === 'left' ? '左侧' : side === 'right' ? '右侧' : null;
@@ -126,7 +123,7 @@ function countRepsStep(ex, setNumber, side) {
   return {
     type: 'count_reps',
     tts: null,
-    duration: (count - 1) * ex.repSec + REP_END_TAIL_SEC,
+    duration: count * ex.repSec,
     cadence: ex.repSec,
     count,
     side,
