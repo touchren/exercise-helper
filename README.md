@@ -89,6 +89,27 @@ App 会自动判断：如果昨天完成了完整抗阻训练，今天就是放�
 
 ---
 
+## 界面预览
+
+<p align="center">
+  <img src="assets/screenshots/01-home.jpg" width="200" alt="首页">
+  <img src="assets/screenshots/02-plan.jpg" width="200" alt="晨练方案">
+  <img src="assets/screenshots/03-workout.jpg" width="200" alt="跟练中">
+  <img src="assets/screenshots/04-records.jpg" width="200" alt="训练记录">
+</p>
+
+> 截图来自微信小程序版（与 PWA 同一套训练逻辑与界面，体验一致）。
+
+### 微信小程序版
+
+微信扫码即可体验小程序版：
+
+<p align="center">
+  <img src="assets/screenshots/05-miniprogram-qr.png" width="220" alt="微信小程序码">
+</p>
+
+---
+
 ## 快速开始
 
 ### 1. 部署
