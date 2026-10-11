@@ -93,8 +93,8 @@ App 会自动判断：如果昨天完成了完整抗阻训练，今天就是放�
 
 <p align="center">
   <img src="assets/screenshots/01-home.jpg" width="200" alt="首页">
-  <img src="assets/screenshots/02-plan.jpg" width="200" alt="晨练方案">
-  <img src="assets/screenshots/03-workout.jpg" width="200" alt="跟练中">
+  <img src="assets/screenshots/02-workout.jpg" width="200" alt="跟练中">
+  <img src="assets/screenshots/03-fullscreen.jpg" width="200" alt="全屏示意图">
   <img src="assets/screenshots/04-records.jpg" width="200" alt="训练记录">
 </p>
 
