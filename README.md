@@ -158,6 +158,10 @@ python3 -m http.server 8080
 | 6 | 俯卧撑 | 抗阻 | 10 次 × 3 组 | 组间 30 秒 |
 | 7 | 狮身人面式 | 拉伸 | 60 秒 | 训练结束 |
 
+<p align="center">
+  <img src="assets/screenshots/06-morning-list.png" width="340" alt="晨练动作列表（18 分钟）">
+</p>
+
 ### 晚练 — 饭后半小时 20 分钟锻炼
 
 强化后链、拉伸胸肩、巩固核心。3 个抗阻动作（单杠离心下放 / 自重深蹲 / 鸟狗式）合计约 8 分钟。
@@ -174,6 +178,10 @@ python3 -m http.server 8080
 | 8 | 婴儿式 | 拉伸 | 40 秒 | 训练结束 |
 
 > 抗阻动作最后一组做完后不设休息时间，直接接拉伸动作。
+
+<p align="center">
+  <img src="assets/screenshots/07-evening-list.png" width="340" alt="晚练动作列表（20 分钟）">
+</p>
 
 ---
 
