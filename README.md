@@ -16,6 +16,27 @@
 
 ---
 
+## 界面预览
+
+<p align="center">
+  <img src="assets/screenshots/01-home.jpg" width="200" alt="首页">
+  <img src="assets/screenshots/02-workout.jpg" width="200" alt="跟练中">
+  <img src="assets/screenshots/03-fullscreen.jpg" width="200" alt="全屏示意图">
+  <img src="assets/screenshots/04-records.jpg" width="200" alt="训练记录">
+</p>
+
+> 截图来自微信小程序版（与 PWA 同一套训练逻辑与界面，体验一致）。
+
+### 微信小程序版
+
+微信扫码即可体验小程序版：
+
+<p align="center">
+  <img src="assets/screenshots/05-miniprogram-qr.png" width="220" alt="微信小程序码">
+</p>
+
+---
+
 ## 先说结论：这个 App 不适合谁
 
 **零基础请先跟视频学会动作。**
@@ -86,27 +107,6 @@ App 会自动判断：如果昨天完成了完整抗阻训练，今天就是放�
 - **PWA 离线可用** — 添加到手机主屏幕，断网也能用，像原生 App 一样全屏运行
 - **零后端零追踪** — 无服务器、无注册、无登录、无数据上传、无分析脚本，训练记录只存在你的设备上
 - **自动匹配时段** — 可设置按时间段自动进入对应训练，早上打开直接进晨练
-
----
-
-## 界面预览
-
-<p align="center">
-  <img src="assets/screenshots/01-home.jpg" width="200" alt="首页">
-  <img src="assets/screenshots/02-workout.jpg" width="200" alt="跟练中">
-  <img src="assets/screenshots/03-fullscreen.jpg" width="200" alt="全屏示意图">
-  <img src="assets/screenshots/04-records.jpg" width="200" alt="训练记录">
-</p>
-
-> 截图来自微信小程序版（与 PWA 同一套训练逻辑与界面，体验一致）。
-
-### 微信小程序版
-
-微信扫码即可体验小程序版：
-
-<p align="center">
-  <img src="assets/screenshots/05-miniprogram-qr.png" width="220" alt="微信小程序码">
-</p>
 
 ---
 
