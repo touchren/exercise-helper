@@ -20,6 +20,10 @@
     illustrationPreviewImg: $('illustration-preview-img'),
     illustrationPreviewTips: $('illustration-preview-tips'),
     phaseName: $('phase-name'),
+    doneTitle: $('done-title'),
+    doneDayNumber: $('done-day-number'),
+    doneMilestoneText: $('done-milestone-text'),
+    doneNextMilestone: $('done-next-milestone'),
     phaseSub: $('phase-sub'),
     phaseStatus: $('phase-status'),
     countdownNumber: $('countdown-number'),
@@ -357,6 +361,13 @@
     el.workoutArea.classList.remove('train-top');
     // 开始页不展示示意图，示意图仅在对应动作进行中（准备+锻炼）显示
     updateExerciseIllustration(null);
+    el.phaseName.classList.remove('hidden');
+    el.doneTitle.classList.add('hidden');
+    el.doneMilestoneText.classList.add('hidden');
+    el.doneNextMilestone.classList.add('hidden');
+    el.phaseStatus.classList.remove('gold-text');
+    el.ringWrap.classList.remove('milestone-glow');
+    el.doneDayNumber.classList.remove('gold');
     setPhaseName('晚练准备就绪');
     renderIdleSub();
     el.phaseStatus.textContent = '准备开始';
@@ -483,10 +494,13 @@ const EXERCISE_ILLUSTRATIONS = {
     el.workoutArea.classList.add('train-top');
     updateExerciseIllustration(phase.exerciseId);
     if (phase.phaseType === 'complete') {
-      setPhaseName('训练结束');
+      el.phaseName.classList.add('hidden');
+      el.doneTitle.classList.add('hidden');
       el.phaseSub.textContent = '本次训练完成，辛苦了';
       el.phaseStatus.textContent = '已完成';
     } else {
+      el.phaseName.classList.remove('hidden');
+      el.doneTitle.classList.add('hidden');
       const setPart = phase.setNumber ? ` · 第${phase.setNumber}/${phase.totalSets}组` : '';
       setPhaseName(`${phase.exerciseName || ''}${setPart}`);
       el.phaseSub.textContent = PHASE_TYPE_LABEL[phase.phaseType] || ' ';
@@ -553,16 +567,42 @@ const EXERCISE_ILLUSTRATIONS = {
     audio.stopAmbient();
     releaseWakeLock();
     saveRecord(stats);
-    setPhaseName('训练结束');
+    hideCountdown();
+    const totalDays = Storage.calculateTotalDays();
+    const milestone = getMilestoneInfo(totalDays);
+
+    el.phaseName.classList.add('hidden');
+    el.doneDayNumber.textContent = String(totalDays);
+    el.doneDayNumber.classList.toggle('gold', milestone.isMilestone);
+    el.doneTitle.classList.remove('hidden');
+    el.doneTitle.classList.remove('fade-in');
+    void el.doneTitle.offsetWidth;
+    el.doneTitle.classList.add('fade-in');
+
+    if (milestone.isMilestone) {
+      el.doneMilestoneText.textContent = milestone.milestoneText;
+      el.doneMilestoneText.classList.remove('hidden');
+    } else {
+      el.doneMilestoneText.classList.add('hidden');
+    }
+
+    if (!milestone.isMilestone && milestone.nextMilestoneText) {
+      el.doneNextMilestone.textContent = milestone.nextMilestoneText;
+      el.doneNextMilestone.classList.remove('hidden');
+    } else {
+      el.doneNextMilestone.classList.add('hidden');
+    }
+
     if (sessionMode === 'stretch') {
       el.phaseSub.textContent = `用时 ${formatDuration(stats.totalTimeSec)} · 放松训练`;
     } else {
       el.phaseSub.textContent = `用时 ${formatDuration(stats.totalTimeSec)} · 抗阻 ${formatMinutes(stats.resistanceTimeSec)} 分钟`;
     }
-    el.phaseStatus.textContent = '辛苦了';
+    el.phaseStatus.textContent = milestone.isMilestone ? '里程碑达成' : '辛苦了';
+    el.phaseStatus.classList.toggle('gold-text', milestone.isMilestone);
+    el.ringWrap.classList.toggle('milestone-glow', milestone.isMilestone);
     el.ringWrap.classList.remove('breathing');
     setRingProgress(1);
-    hideCountdown();
     el.ringWrap.classList.remove('pulse');
     void el.ringWrap.offsetWidth;
     el.ringWrap.classList.add('pulse');

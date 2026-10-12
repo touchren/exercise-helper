@@ -158,7 +158,14 @@
             </div>
           </div>
           <h2 id="phase-name" class="phase-name">晨练准备就绪</h2>
+          <div id="done-title" class="done-title fade-in hidden">
+            <span class="done-title-text">达成第</span>
+            <span id="done-day-number" class="done-day-number">0</span>
+            <span class="done-title-text">天训练</span>
+          </div>
+          <p id="done-milestone-text" class="done-milestone-text hidden"></p>
           <p id="phase-sub" class="phase-sub">全程18分钟 · 抗阻8分钟</p>
+          <p id="done-next-milestone" class="done-next-milestone hidden"></p>
           <div id="mode-switch" class="mode-switch hidden">
             <div class="mode-btns">
               <button id="btn-mode-full" type="button" class="mode-btn" data-mode="full">完整训练</button>
@@ -332,6 +339,7 @@
   </div>
 
 <script src="workout-data.js?v=174"></script>
+<script src="milestones.js?v=174"></script>
 <script src="storage.js?v=174"></script>
 <script src="audio.js?v=174"></script>
 <script src="engine.js?v=174"></script>

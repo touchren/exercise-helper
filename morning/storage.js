@@ -166,6 +166,28 @@ const KEY_RECORDS = 'morning:records';
       } catch (err) {
         console.warn('[storage] 清除记录失败', err);
       }
+    },
+
+    /** 累计完成训练的不重复自然日天数（合并晨练与晚练，仅计 completed，按本地日期去重） */
+    calculateTotalDays() {
+      const keys = ['morning:records', 'evening:records'];
+      const daySet = {};
+      let count = 0;
+      keys.forEach((key) => {
+        const records = readJson(key, []);
+        if (!Array.isArray(records)) return;
+        records.forEach((rec) => {
+          if (!rec || !rec.completed) return;
+          const d = new Date(rec.date);
+          if (Number.isNaN(d.getTime())) return;
+          const y = d.getFullYear();
+          const m = String(d.getMonth() + 1).padStart(2, '0');
+          const day = String(d.getDate()).padStart(2, '0');
+          const dateKey = y + '-' + m + '-' + day;
+          if (!daySet[dateKey]) { daySet[dateKey] = true; count++; }
+        });
+      });
+      return count;
     }
   };
 })();
