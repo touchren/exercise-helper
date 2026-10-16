@@ -77,6 +77,9 @@
   let recommendedMode = 'full';
   let currentMode = 'full';
   let sessionMode = 'full';
+  let lastSkipTs = 0;                  // 上次「跳过」时间戳，用于双击判定
+  let lastSkipExerciseId = null;       // 上次「跳过」时所在动作 id
+  const DOUBLE_SKIP_MS = 400;          // 双击窗口（ms）
 
   el.ringProgress.style.strokeDasharray = String(RING_CIRCUMFERENCE);
 
@@ -307,7 +310,18 @@
         setPauseState(false);
         el.phaseStatus.classList.remove('paused-text');
       }
-      engine.skipPhase();
+      const exId = engine.currentStep ? engine.currentStep.exerciseId : null;
+      const now = Date.now();
+      if (exId && lastSkipExerciseId === exId && now - lastSkipTs <= DOUBLE_SKIP_MS) {
+        // 连续两次跳过（≤400ms）：跳过整个动作剩余步骤
+        engine.skipExercise(exId);
+        lastSkipTs = 0;
+        lastSkipExerciseId = null;
+      } else {
+        engine.skipPhase();
+        lastSkipTs = now;
+        lastSkipExerciseId = exId;
+      }
       setControlsState();
     }
   });

@@ -59,6 +59,8 @@ class WorkoutEngine {
     this._clearTimers();
     this.speechStepActive = false;
     this.audio.cancelSpeech();
+    // 暂停即停环境音（鼓点等），继续时再恢复，避免暂停期间背景音乐继续走
+    this.audio.stopAmbient();
   }
 
   resume() {
@@ -66,6 +68,7 @@ class WorkoutEngine {
     this.state = 'running';
     this.totalPausedMs += Date.now() - (this.pauseStartTs || Date.now());
     this.pauseStartTs = null;
+    this._resumeAmbient();
 
     if (this._isSpeechDriven(this.currentStep)) {
       this._runSpeechStep(this.currentStep);
@@ -89,6 +92,7 @@ class WorkoutEngine {
   /** 跳过当前步骤，直接进入下一步骤（含从暂停状态跳过）。 */
   skipPhase() {
     if (this.state !== 'running' && this.state !== 'paused') return;
+    const wasPaused = this.state === 'paused' || this.pauseStartTs != null;
     if (this.pauseStartTs != null) {
       this.totalPausedMs += Date.now() - this.pauseStartTs;
       this.pauseStartTs = null;
@@ -98,11 +102,55 @@ class WorkoutEngine {
     this.speechStepActive = false;
     this.audio.cancelSpeech();
     this.state = 'running';
+    if (wasPaused) this._resumeAmbient();
     this.stepIndex++;
     if (this.stepIndex >= this.steps.length) {
       this._finish();
     } else {
       this._startStep(this.stepIndex);
+    }
+  }
+
+  /** 跳过指定动作剩余的整组步骤（连续两次「跳过」触发，直接结束该动作）。 */
+  skipExercise(exerciseId) {
+    if (this.state !== 'running' && this.state !== 'paused') return;
+    const stepAt = this.steps[this.stepIndex];
+    if (!exerciseId || !stepAt || stepAt.exerciseId !== exerciseId) {
+      // 当前步骤已不属于目标动作（已越过），退化为单步跳过，避免误跳下一个动作
+      this.skipPhase();
+      return;
+    }
+    const wasPaused = this.state === 'paused' || this.pauseStartTs != null;
+    if (this.pauseStartTs != null) {
+      this.totalPausedMs += Date.now() - this.pauseStartTs;
+      this.pauseStartTs = null;
+    }
+    this._addPartialResistanceTime();
+    this._clearTimers();
+    this.speechStepActive = false;
+    this.audio.cancelSpeech();
+    this.state = 'running';
+    if (wasPaused) this._resumeAmbient();
+    let idx = this.stepIndex;
+    while (idx < this.steps.length && this.steps[idx].exerciseId === exerciseId) {
+      idx++;
+    }
+    this.stepIndex = idx;
+    if (this.stepIndex >= this.steps.length) {
+      this._finish();
+    } else {
+      this._startStep(this.stepIndex);
+    }
+  }
+
+  /** 恢复环境音（暂停/跳过恢复时调用，仅当设置启用）。 */
+  _resumeAmbient() {
+    const ambient = this.settings.ambient;
+    if (ambient && ambient.enabled) {
+      this.audio.startAmbient({
+        type: ambient.type || 'beat',
+        volume: ambient.volume != null ? ambient.volume : 0.3
+      });
     }
   }
 
